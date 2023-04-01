@@ -35,7 +35,7 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public void delete(Integer id) {
-
+        menuItemRepository.deleteById(id);
     }
 
 
