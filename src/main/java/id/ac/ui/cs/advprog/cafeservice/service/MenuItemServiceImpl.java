@@ -15,12 +15,13 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public List<MenuItem> findAll() {
-        return null;
+        return menuItemRepository.findAll();
     }
 
     @Override
     public MenuItem findById(Integer id) {
-        return null;
+        MenuItem menuItem = menuItemRepository.findById(id).get();
+        return menuItem;
     }
 
     @Override
@@ -30,7 +31,11 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItem update(Integer id, MenuItemRequest request) {
-        return null;
+        MenuItem menuItem = menuItemRepository.findById(id).get();
+        menuItem.setName(request.getName());
+        menuItem.setPrice(request.getPrice());
+        menuItem.setStock(request.getStock());
+        return menuItem;
     }
 
     @Override
