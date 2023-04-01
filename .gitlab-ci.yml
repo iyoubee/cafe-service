@@ -82,7 +82,7 @@ Publish:
   tags:
     - dind
   only:
-    - master
+    - main
 
 
 
