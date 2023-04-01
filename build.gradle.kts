@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "3.0.4"
     id("io.spring.dependency-management") version "1.1.0"
     jacoco
+    id("org.sonarqube") version "3.0"
 }
 
 group = "id.ac.ui.cs.advprog"
