@@ -20,8 +20,9 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItem findById(Integer id) {
-        MenuItem menuItem = menuItemRepository.findById(id).get();
-        return menuItem;
+
+        Optional<MenuItem> menuItem = menuItemRepository.findById(id);
+        return menuItem.orElse(null);
     }
 
     @Override
@@ -31,11 +32,14 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItem update(Integer id, MenuItemRequest request) {
-        MenuItem menuItem = menuItemRepository.findById(id).get();
-        menuItem.setName(request.getName());
-        menuItem.setPrice(request.getPrice());
-        menuItem.setStock(request.getStock());
-        return menuItem;
+
+        Optional<MenuItem> menuItem = menuItemRepository.findById(id);
+        if (menuItem.isEmpty()) return null;
+        MenuItem item = menuItem.get();
+        item.setName(request.getName());
+        item.setPrice(request.getPrice());
+        item.setStock(request.getStock());
+        return item;
     }
 
     @Override
