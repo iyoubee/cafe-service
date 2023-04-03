@@ -116,6 +116,7 @@ Sonarqube:
       - .sonar/cache
   script:
     - sonar-scanner
+      -X
       -Dsonar.sources=.
       -Dsonar.host.url=https://sonarqube.cs.ui.ac.id
       -Dsonar.login=$SONAR_TOKEN
