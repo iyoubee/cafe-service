@@ -18,6 +18,7 @@ stages:
   - test
   - publish
   - deploy
+  - sonarqube
 
 
 
