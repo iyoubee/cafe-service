@@ -116,12 +116,7 @@ Sonarqube:
     - echo `pwd`
     - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
-    - gradle sonarqube
-      -X
-      -Dsonar.sources=.
-      -Dsonar.host.url=https://sonarqube.cs.ui.ac.id
-      -Dsonar.login=$SONAR_TOKEN
-      -Dsonar.projectKey=$SONAR_KEY
+    - gradle sonarqube -Dsonar.host.url=https://sonarqube.cs.ui.ac.id -Dsonar.login=$SONAR_TOKEN -Dsonar.projectKey=$SONAR_KEY
   allow_failure: true
   only:
     - main
