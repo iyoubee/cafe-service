@@ -114,6 +114,9 @@ Sonarqube:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
+  before_script:
+    - echo `pwd`
+    - export GRADLE_USER_HOME=`pwd`/.gradle
   script:
     - gradle sonarqube
       -X
