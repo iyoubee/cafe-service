@@ -115,7 +115,7 @@ Sonarqube:
     paths:
       - .sonar/cache
   script:
-    - sonar-scanner
+    - gradle sonarqube
       -X
       -Dsonar.sources=.
       -Dsonar.host.url=https://sonarqube.cs.ui.ac.id
