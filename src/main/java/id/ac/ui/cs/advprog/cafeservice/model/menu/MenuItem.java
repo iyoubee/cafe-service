@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class MenuItem {
     @Id
     @GeneratedValue
-    private String id;
+    private Integer id;
     private String name;
     private Integer price;
     private Integer stock;

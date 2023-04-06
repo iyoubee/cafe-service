@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MenuItemRequest {
-    private String id;
     private String name;
     private Integer price;
     private Integer stock;
