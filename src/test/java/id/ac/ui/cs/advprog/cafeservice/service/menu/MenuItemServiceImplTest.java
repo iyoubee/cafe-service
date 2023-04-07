@@ -39,7 +39,7 @@ class MenuItemServiceImplTest {
     @BeforeEach
     void setUp() {
         createRequest = MenuItemRequest.builder()
-                .name("Indome")
+                .name("Indomie")
                 .price(5000)
                 .stock(100)
                 .build();
