@@ -29,7 +29,11 @@ public class MenuItemServiceImpl implements MenuItemService {
 
     @Override
     public MenuItem create(MenuItemRequest request) {
-        return null;
+        MenuItem menuItem = new MenuItem();
+        menuItem.setName(request.getName());
+        menuItem.setPrice(request.getPrice());
+        menuItem.setStock(request.getStock());
+        return menuItemRepository.save(menuItem);
     }
 
     @Override
