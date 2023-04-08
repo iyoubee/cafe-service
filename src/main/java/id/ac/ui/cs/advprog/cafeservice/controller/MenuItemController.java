@@ -42,6 +42,6 @@ public class MenuItemController {
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteMenuItem(@PathVariable String id) {
         menuItemService.delete(id);
-        return ResponseEntity.ok(String.format("Deleted Menu Item with id %d", id));
+        return ResponseEntity.ok(String.format("Deleted Menu Item with id %s", id));
     }
 }
