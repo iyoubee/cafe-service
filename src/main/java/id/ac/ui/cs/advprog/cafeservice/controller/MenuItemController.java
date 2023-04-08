@@ -37,20 +37,22 @@ public class MenuItemController {
             throw new BadRequest();
         }
 
-        if(request.getName().equals("")){
+        else if(request.getName().equals("")){
             throw new MenuItemValueEmpty("Name");
         }
 
-        if(request.getPrice() < 0){
+        else if(request.getPrice() < 0){
             throw new MenuItemValueInvalid("Price");
         }
 
-        if(request.getStock() < 0){
+        else if(request.getStock() < 0){
             throw new MenuItemValueInvalid("Stock");
         }
 
-        MenuItem response = menuItemService.create(request);
-        return ResponseEntity.ok(response);
+        else{
+            MenuItem response = menuItemService.create(request);
+            return ResponseEntity.ok(response);
+        }
     }
 
     @PutMapping("/update/{id}")

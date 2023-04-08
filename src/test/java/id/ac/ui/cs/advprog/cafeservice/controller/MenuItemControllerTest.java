@@ -3,6 +3,8 @@ package id.ac.ui.cs.advprog.cafeservice.controller;
 import id.ac.ui.cs.advprog.cafeservice.Util;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueEmpty;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueInvalid;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,6 +55,8 @@ class MenuItemControllerTest {
 
         badRequest = MenuItem.builder()
             .name("Indomie")
+            .price(null)
+            .stock(4)
             .build();
 
         invalidValue = MenuItem.builder()
@@ -136,7 +140,7 @@ class MenuItemControllerTest {
     void testInvalidValueAddMenuItem() throws Exception {
         when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
 
-        Exception exception = assertThrows(BadRequest.class, () -> {
+        Exception exception = assertThrows(MenuItemValueInvalid.class, () -> {
             mvc.perform(post("/cafe/menu/create")
             .contentType(MediaType.APPLICATION_JSON)
             .content(Util.mapToJson(bodyContent)));
@@ -152,7 +156,7 @@ class MenuItemControllerTest {
     void testNameEmptyAddMenuItem() throws Exception {
         when(service.create(any(MenuItemRequest.class))).thenReturn(emptyName);
 
-        Exception exception = assertThrows(BadRequest.class, () -> {
+        Exception exception = assertThrows(MenuItemValueEmpty.class, () -> {
             mvc.perform(post("/cafe/menu/create")
             .contentType(MediaType.APPLICATION_JSON)
             .content(Util.mapToJson(bodyContent)));
