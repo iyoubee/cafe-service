@@ -121,7 +121,7 @@ class MenuItemControllerTest {
         mvc.perform(post("/cafe/menu/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(Util.mapToJson(bodyContent)))
-                .andExpect(result -> assertEquals("400 Bad Request", result.getResolvedException().getMessage()));
+                        .andExpect(content().string("400 Bad Request"));
     }
 
     @Test
@@ -131,7 +131,7 @@ class MenuItemControllerTest {
         mvc.perform(post("/cafe/menu/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(Util.mapToJson(bodyContent)))
-                .andExpect(result -> assertEquals("The value of Price is invalid", result.getResolvedException().getMessage()));
+                        .andExpect(content().string("The value of Price is invalid"));
     }
 
     @Test
@@ -141,7 +141,7 @@ class MenuItemControllerTest {
         mvc.perform(post("/cafe/menu/create")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(Util.mapToJson(bodyContent)))
-                .andExpect(result -> assertEquals("The menu item Name request can't be empty", result.getResolvedException().getMessage()));
+                        .andExpect(content().string("The menu item Name request can't be empty"));
     }
 
     @Test
