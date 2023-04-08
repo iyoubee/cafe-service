@@ -35,11 +35,11 @@ class MenuItemControllerTest {
 
     MenuItem menuItem;
 
-    MenuItemRequest badRequest;
+    MenuItem badRequest;
 
-    MenuItemRequest emptyName;
+    MenuItem emptyName;
 
-    MenuItemRequest invalidValue;
+    MenuItem invalidValue;
 
     Object bodyContent;
 
@@ -51,17 +51,17 @@ class MenuItemControllerTest {
                 .stock(100)
                 .build();
 
-        badRequest = MenuItemRequest.builder()
+        badRequest = MenuItem.builder()
             .name("Indomie")
             .build();
 
-        invalidValue = MenuItemRequest.builder()
+        invalidValue = MenuItem.builder()
         .name("Indomie")
         .price(-100)
         .stock(-1)
         .build();
 
-        emptyName =  MenuItemRequest.builder()
+        emptyName =  MenuItem.builder()
         .name("")
         .price(1000)
         .stock(2)
