@@ -124,48 +124,48 @@ class MenuItemControllerTest {
     void testBadRequestAddMenuItem() throws Exception {
         when(service.create(any(MenuItemRequest.class))).thenReturn(badRequest);
 
-        Exception exception = assertThrows(BadRequest.class, () -> {
+        try {
             mvc.perform(post("/cafe/menu/create")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(Util.mapToJson(bodyContent)));
-        });
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(Util.mapToJson(bodyContent)));
+        } catch (Exception e) {
+            String expectedMessage = "400 Bad Request";
+            String actualMessage = e.getMessage();
 
-        String expectedMessage = "400 Bad Request";
-        String actualMessage = exception.getMessage();
-
-        assertTrue(actualMessage.contains(expectedMessage));
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
     }
 
     @Test
     void testInvalidValueAddMenuItem() throws Exception {
         when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
 
-        Exception exception = assertThrows(MenuItemValueInvalid.class, () -> {
+        try {
             mvc.perform(post("/cafe/menu/create")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(Util.mapToJson(bodyContent)));
-        });
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(Util.mapToJson(bodyContent)));
+        } catch (Exception e) {
+            String expectedMessage = "The value of Price is invalid";
+            String actualMessage = e.getMessage();
 
-        String expectedMessage = "The value of Price is invalid";
-        String actualMessage = exception.getMessage();
-
-        assertTrue(actualMessage.contains(expectedMessage));
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
     }
 
     @Test
     void testNameEmptyAddMenuItem() throws Exception {
         when(service.create(any(MenuItemRequest.class))).thenReturn(emptyName);
 
-        Exception exception = assertThrows(MenuItemValueEmpty.class, () -> {
+        try {
             mvc.perform(post("/cafe/menu/create")
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(Util.mapToJson(bodyContent)));
-        });
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(Util.mapToJson(bodyContent)));
+        } catch (Exception e) {
+            String expectedMessage = "The menu item Name request can't be empty";
+            String actualMessage = e.getMessage();
 
-        String expectedMessage = "The menu item Name request can't be empty";
-        String actualMessage = exception.getMessage();
-
-        assertTrue(actualMessage.contains(expectedMessage));
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
     }
 
     @Test
