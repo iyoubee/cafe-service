@@ -22,7 +22,7 @@ public class MenuItemController {
     }
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<MenuItem> getMenuItemById(@PathVariable Integer id) {
+    public ResponseEntity<MenuItem> getMenuItemById(@PathVariable String id) {
         MenuItem response = menuItemService.findById(id);
         return ResponseEntity.ok(response);
     }
@@ -34,13 +34,13 @@ public class MenuItemController {
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<MenuItem> putMenuItem(@PathVariable Integer id, @RequestBody MenuItemRequest request) {
+    public ResponseEntity<MenuItem> putMenuItem(@PathVariable String id, @RequestBody MenuItemRequest request) {
         MenuItem response = menuItemService.update(id, request);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteMenuItem(@PathVariable Integer id) {
+    public ResponseEntity<String> deleteMenuItem(@PathVariable String id) {
         menuItemService.delete(id);
         return ResponseEntity.ok(String.format("Deleted Menu Item with id %d", id));
     }

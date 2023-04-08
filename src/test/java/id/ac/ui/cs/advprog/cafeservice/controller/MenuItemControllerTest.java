@@ -68,7 +68,7 @@ class MenuItemControllerTest {
 
     @Test
     void testGetMenuItemById() throws Exception {
-        when(service.findById(any(Integer.class))).thenReturn(menuItem);
+        when(service.findById(any(String.class))).thenReturn(menuItem);
 
         mvc.perform(get("/cafe/menu/id/1")
                     .contentType(MediaType.APPLICATION_JSON))

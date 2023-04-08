@@ -8,8 +8,8 @@ import java.util.List;
 @Service
 public interface MenuItemService {
     List<MenuItem> findAll();
-    MenuItem findById(Integer id);
+    MenuItem findById(String id);
     MenuItem create(MenuItemRequest request);
-    MenuItem update(Integer id, MenuItemRequest request);
-    void delete(Integer id);
+    MenuItem update(String id, MenuItemRequest request);
+    void delete(String id);
 }
