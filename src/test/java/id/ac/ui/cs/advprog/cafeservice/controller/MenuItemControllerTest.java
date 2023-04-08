@@ -90,4 +90,19 @@ class MenuItemControllerTest {
 
         verify(service, atLeastOnce()).create(any(MenuItemRequest.class));
     }
+
+    @Test
+    void testPutMenuItem() throws Exception {
+        when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(menuItem);
+
+        mvc.perform(put("/cafe/menu/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("putMenuItem"))
+                .andExpect(jsonPath("$.name").value(menuItem.getName()));
+
+        verify(service, atLeastOnce()).update(any(String.class), any(MenuItemRequest.class));
+    }
+
 }
