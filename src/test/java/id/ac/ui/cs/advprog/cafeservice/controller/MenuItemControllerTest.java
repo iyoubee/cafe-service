@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -32,6 +33,12 @@ class MenuItemControllerTest {
 
     MenuItem menuItem;
 
+    MenuItem badRequest;
+
+    MenuItem emptyName;
+
+    MenuItem invalidValue;
+
     Object bodyContent;
 
     @BeforeEach
@@ -41,6 +48,22 @@ class MenuItemControllerTest {
                 .price(5000)
                 .stock(100)
                 .build();
+
+        badRequest = MenuItem.builder()
+            .name("Indomie")
+            .build();
+
+        invalidValue = MenuItem.builder()
+        .name("Indomie")
+        .price(-100)
+        .stock(-1)
+        .build();
+
+        emptyName =  MenuItem.builder()
+        .name("")
+        .price(1000)
+        .stock(2)
+        .build();
 
         bodyContent = new Object() {
             public final String name = "Indomie";
@@ -89,6 +112,36 @@ class MenuItemControllerTest {
                 .andExpect(jsonPath("$.name").value(menuItem.getName()));
 
         verify(service, atLeastOnce()).create(any(MenuItemRequest.class));
+    }
+
+    @Test
+    void testBadRequestAddMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(badRequest);
+
+        mvc.perform(post("/cafe/menu/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(result -> assertEquals("400 Bad Request", result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    void testInvalidValueAddMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(badRequest);
+
+        mvc.perform(post("/cafe/menu/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(result -> assertEquals("The value of Price is invalid", result.getResolvedException().getMessage()));
+    }
+
+    @Test
+    void testNameEmptyAddMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(badRequest);
+
+        mvc.perform(post("/cafe/menu/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(result -> assertEquals("The menu item Name request can't be empty", result.getResolvedException().getMessage()));
     }
 
     @Test
