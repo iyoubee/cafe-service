@@ -58,7 +58,7 @@ class MenuItemServiceImplTest {
                 .build();
 
         newMenuItem = MenuItem.builder()
-                .id("f20a0089-a4d6-49d7-8be8-9cdc81bd7340")
+                .id("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10")
                 .name("Es Teh")
                 .price(2000)
                 .stock(200)
@@ -89,14 +89,14 @@ class MenuItemServiceImplTest {
     void whenFindByIdAndNotFoundShouldThrowException() {
         when(repository.findById(any(String.class))).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.findById(""));
+        Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.findById("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a11"));
     }
 
     @Test
     void whenCreateMenuItemShouldReturnTheCreatedMenuItem() {
         when(repository.save(any(MenuItem.class))).thenAnswer(invocation -> {
             var menuItem = invocation.getArgument(0, MenuItem.class);
-            menuItem.setId("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a11");
+            menuItem.setId("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10");
             return menuItem;
         });
 
@@ -111,7 +111,7 @@ class MenuItemServiceImplTest {
         when(repository.save(any(MenuItem.class))).thenAnswer(invocation ->
                 invocation.getArgument(0, MenuItem.class));
 
-        MenuItem result = service.update("f20a0089-a4d6-49d7-8be8-9cdc81bd7340", updateRequest);
+        MenuItem result = service.update("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10", updateRequest);
         verify(repository, atLeastOnce()).save(any(MenuItem.class));
         Assertions.assertEquals(newMenuItem, result);
     }
