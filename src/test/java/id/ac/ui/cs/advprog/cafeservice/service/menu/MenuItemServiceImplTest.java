@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class MenuItemServiceImplTest {
 
@@ -36,9 +37,9 @@ class MenuItemServiceImplTest {
     MenuItemRequest updateRequest;
 
     @BeforeEach
-    void setUp(){
+    void setUp() {
         createRequest = MenuItemRequest.builder()
-                .name("Indome")
+                .name("Indomie")
                 .price(5000)
                 .stock(100)
                 .build();
@@ -65,7 +66,7 @@ class MenuItemServiceImplTest {
     }
 
     @Test
-    void whenFindAllMenuItemShouldReturnListOfMenuItem(){
+    void whenFindAllMenuItemShouldReturnListOfMenuItem() {
         List<MenuItem> allMenuItem = List.of(menuItem);
 
         when(repository.findAll()).thenReturn(allMenuItem);
@@ -89,6 +90,19 @@ class MenuItemServiceImplTest {
         when(repository.findById(any(Integer.class))).thenReturn(Optional.empty());
 
         Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.findById(0));
+    }
+
+    @Test
+    void whenCreateMenuItemShouldReturnTheCreatedMenuItem() {
+        when(repository.save(any(MenuItem.class))).thenAnswer(invocation -> {
+            var menuItem = invocation.getArgument(0, MenuItem.class);
+            menuItem.setId(0);
+            return menuItem;
+        });
+
+        MenuItem result = service.create(createRequest);
+        verify(repository, atLeastOnce()).save(any(MenuItem.class));
+        Assertions.assertEquals(menuItem, result);
     }
 
     @Test
