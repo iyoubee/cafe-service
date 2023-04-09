@@ -20,7 +20,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    public MenuItem findById(String id) {
+    public MenuItem findById(Integer id) {
 
         Optional<MenuItem> menuItem = menuItemRepository.findById(id);
         if (menuItem.isEmpty()) throw new MenuItemDoesNotExistException(id);
@@ -37,7 +37,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    public MenuItem update(String id, MenuItemRequest request) {
+    public MenuItem update(Integer id, MenuItemRequest request) {
 
         Optional<MenuItem> menuItem = menuItemRepository.findById(id);
         if (menuItem.isEmpty()) throw new MenuItemDoesNotExistException(id);
@@ -49,7 +49,7 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    public void delete(String id) {
+    public void delete(Integer id) {
         menuItemRepository.deleteById(id);
     }
 

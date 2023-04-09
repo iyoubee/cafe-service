@@ -12,6 +12,6 @@ public interface MenuItemRepository extends JpaRepository<MenuItem, String> {
     @NonNull
     List<MenuItem> findAll();
     @NonNull
-    Optional<MenuItem> findById(@NonNull String id);
-    void deleteById(@NonNull String id);
+    Optional<MenuItem> findById(@NonNull Integer id);
+    void deleteById(@NonNull Integer id);
 }

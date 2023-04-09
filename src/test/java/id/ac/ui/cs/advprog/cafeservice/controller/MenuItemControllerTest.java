@@ -68,7 +68,7 @@ class MenuItemControllerTest {
 
     @Test
     void testGetMenuItemById() throws Exception {
-        when(service.findById(any(String.class))).thenReturn(menuItem);
+        when(service.findById(any(Integer.class))).thenReturn(menuItem);
 
         mvc.perform(get("/cafe/menu/id/1")
                     .contentType(MediaType.APPLICATION_JSON))
@@ -93,7 +93,7 @@ class MenuItemControllerTest {
 
     @Test
     void testPutMenuItem() throws Exception {
-        when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(menuItem);
+        when(service.update(any(Integer.class), any(MenuItemRequest.class))).thenReturn(menuItem);
 
         mvc.perform(put("/cafe/menu/update/1")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -102,7 +102,17 @@ class MenuItemControllerTest {
                 .andExpect(handler().methodName("putMenuItem"))
                 .andExpect(jsonPath("$.name").value(menuItem.getName()));
 
-        verify(service, atLeastOnce()).update(any(String.class), any(MenuItemRequest.class));
+        verify(service, atLeastOnce()).update(any(Integer.class), any(MenuItemRequest.class));
+    }
+
+    @Test
+    void testDeleteMenuItem() throws Exception {
+        mvc.perform((delete("/cafe/menu/delete/1")
+                .contentType(MediaType.APPLICATION_JSON)))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("deleteMenuItem"));
+
+        verify(service, atLeastOnce()).delete(any(Integer.class));
     }
 
 }
