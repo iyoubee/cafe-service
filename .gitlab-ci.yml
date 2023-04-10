@@ -78,7 +78,7 @@ Publish:
     - echo $DOCKER_PASSWORD| docker login -u $REGISTRY_USER --password-stdin docker.io
   script:
     - ls
-    - docker build --build-arg PRODUCTION=prod --build-arg JDBC_DATABASE_PASSWORD=C4fe$upabase --build-arg JDBC_DATABASE_URL=jdbc:postgresql://db.fikkvjcnmpeqbeqrolvq.supabase.co:5432/postgres?user=postgres&password=C4fe$upabase --build-arg JDBC_DATABASE_USERNAME=postgres -t $REGISTRY_USER/$IMAGE_NAME:$IMAGE_TAG .
+    - docker build --build-arg PRODUCTION=$PRODUCTION --build-arg JDBC_DATABASE_PASSWORD=$JDBC_DATABASE_PASSWORD --build-arg JDBC_DATABASE_URL=$JDBC_DATABASE_URL --build-arg JDBC_DATABASE_USERNAME=$JDBC_DATABASE_USERNAME -t $REGISTRY_USER/$IMAGE_NAME:$IMAGE_TAG .
     - docker push $REGISTRY_USER/$IMAGE_NAME:$IMAGE_TAG
   tags:
     - dind
