@@ -1,6 +1,9 @@
 package id.ac.ui.cs.advprog.cafeservice.controller;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueEmpty;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueInvalid;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemService;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +32,27 @@ public class MenuItemController {
 
     @PostMapping("/create")
     public ResponseEntity<MenuItem> addMenuItem(@RequestBody MenuItemRequest request) {
-        MenuItem response = menuItemService.create(request);
-        return ResponseEntity.ok(response);
+
+        if(request.getName() == null || request.getPrice() == null || request.getStock() == null){
+            throw new BadRequest();
+        }
+
+        else if(request.getName().equals("")){
+            throw new MenuItemValueEmpty("Name");
+        }
+
+        else if(request.getPrice() < 0){
+            throw new MenuItemValueInvalid("Price");
+        }
+
+        else if(request.getStock() < 0){
+            throw new MenuItemValueInvalid("Stock");
+        }
+
+        else{
+            MenuItem response = menuItemService.create(request);
+            return ResponseEntity.ok(response);
+        }
     }
 
     @PutMapping("/update/{id}")
