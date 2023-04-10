@@ -49,7 +49,9 @@ public class MenuItemServiceImpl implements MenuItemService {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String id) {
+        Optional<MenuItem> menuItem = menuItemRepository.findById(id);
+        if (menuItem.isEmpty()) throw new MenuItemDoesNotExistException(id);
         menuItemRepository.deleteById(id);
     }
 

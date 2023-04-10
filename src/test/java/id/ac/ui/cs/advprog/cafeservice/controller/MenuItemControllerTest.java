@@ -115,4 +115,13 @@ class MenuItemControllerTest {
         verify(service, atLeastOnce()).delete(any(Integer.class));
     }
 
+    @Test
+    void testDeleteMedicine() throws Exception {
+        mvc.perform(delete("/cafe/menu/delete/1")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("deleteMenuItem"));
+        verify(service, atLeastOnce()).delete(any(String.class));
+    }
+
 }
