@@ -121,4 +121,20 @@ class MenuItemServiceImplTest {
         when(repository.findById(any(String.class))).thenReturn(Optional.empty());
         Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.update("f20a0089-a4d6-49d7-8be8-9cdc81bd7341", updateRequest));
     }
+
+    @Test
+    void whenDeleteMenuItemAndFoundShouldCallDeleteByIdOnRepo() {
+        when(repository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+
+        service.delete("f20a0089-a4d6-49d7-8be8-9cdc81bd7341");
+        verify(repository, atLeastOnce()).deleteById(any(String.class));
+    }
+
+    @Test
+    void whenDeleteMenuItemAndNotFoundShouldThrowException() {
+        when(repository.findById(any(String.class))).thenReturn(Optional.empty());
+        Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> {
+            service.delete("f20a0089-a4d6-49d7-8be8-9cdc81bd7341");
+        });
+    }
 }
