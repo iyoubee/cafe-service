@@ -119,7 +119,7 @@ class MenuItemServiceImplTest {
     @Test
     void whenUpdateMenuItemAndNotFoundShouldThrowException() {
         when(repository.findById(any(String.class))).thenReturn(Optional.empty());
-        Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.findById("f20a0089-a4d6-49d7-8be8-9cdc81bd7341"));
+        Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.update("f20a0089-a4d6-49d7-8be8-9cdc81bd7341", updateRequest));
     }
 
     @Test

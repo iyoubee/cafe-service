@@ -15,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/cafe/menu")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class MenuItemController {
     private final MenuItemService menuItemService;
 
@@ -57,8 +58,26 @@ public class MenuItemController {
 
     @PutMapping("/update/{id}")
     public ResponseEntity<MenuItem> putMenuItem(@PathVariable String id, @RequestBody MenuItemRequest request) {
-        MenuItem response = menuItemService.update(id, request);
-        return ResponseEntity.ok(response);
+        if(request.getName() == null || request.getPrice() == null || request.getStock() == null){
+            throw new BadRequest();
+        }
+
+        else if(request.getName().equals("")){
+            throw new MenuItemValueEmpty("Name");
+        }
+
+        else if(request.getPrice() < 0){
+            throw new MenuItemValueInvalid("Price");
+        }
+
+        else if(request.getStock() < 0){
+            throw new MenuItemValueInvalid("Stock");
+        }
+
+        else {
+            MenuItem response = menuItemService.update(id, request);
+            return ResponseEntity.ok(response);
+        }
     }
 
     @DeleteMapping("/delete/{id}")
