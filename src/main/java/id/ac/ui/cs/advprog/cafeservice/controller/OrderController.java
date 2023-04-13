@@ -24,13 +24,13 @@ public class OrderController {
     }
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<Order> getOrderById(@PathVariable String id) {
+    public ResponseEntity<Order> getOrderById(@PathVariable Integer id) {
         Order response = orderService.findById(id);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/update/{id}")
-    public ResponseEntity<Order> changeStatus(@PathVariable String id, @RequestBody OrderRequest request) {
+    public ResponseEntity<Order> changeStatus(@PathVariable Integer id, @RequestBody OrderRequest request) {
         if(request.getSession() == null || request.getOrderDetailsList() == null){
             throw new BadRequest();
         }
