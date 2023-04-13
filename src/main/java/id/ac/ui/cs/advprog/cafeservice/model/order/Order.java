@@ -1,6 +1,5 @@
 package id.ac.ui.cs.advprog.cafeservice.model.order;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +20,6 @@ public class Order {
     @GeneratedValue
     private Integer id;
     private String session;
-    @JsonIgnore
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderDetails> orderDetailsList;
 }
