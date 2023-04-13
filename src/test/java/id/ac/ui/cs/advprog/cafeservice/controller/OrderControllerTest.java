@@ -19,6 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -72,12 +74,14 @@ class OrderControllerTest {
         bodyContent = new Object() {
             public final String session = "x98ad8f7w9ws7g9v3";
 
-            public final OrderDetails orderDetails = OrderDetails.builder()
-            .menuItem(menuItem)
-            .quantity(1)
-            .status("Approved")
-            .totalPrice(10000)
-            .build();
+            public final List<OrderDetails> orderDetails = Arrays.asList(
+                OrderDetails.builder()
+                    .menuItem(menuItem)
+                    .quantity(1)
+                    .status("Approved")
+                    .totalPrice(10000)
+                    .build()
+            );
         };
     }
 
