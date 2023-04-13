@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface OrderRepository extends JpaRepository<MenuItem, String> {
+public interface OrderRepository extends JpaRepository<Order, String> {
     @NonNull
     List<Order> findAll();
     @NonNull
