@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueEmpty;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueInvalid;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -180,6 +181,55 @@ class MenuItemControllerTest {
                 .andExpect(jsonPath("$.name").value(menuItem.getName()));
 
         verify(service, atLeastOnce()).update(any(String.class), any(MenuItemRequest.class));
+    }
+
+    @Test
+    void testPutMenuItemWhenMenuItemValueIsNull() throws Exception {
+        when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(badRequest);
+
+        try {
+            mvc.perform(put("/cafe/menu/update/1")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(Util.mapToJson(bodyContent)));
+        }catch (BadRequest e) {
+            Assertions.assertEquals(BadRequest.class, e.getClass());
+        }
+    }
+
+    @Test
+    void testPutMenuItemWhenMenuItemValueIsEmpty() throws Exception {
+        when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(emptyName);
+
+        try {
+            mvc.perform(put("/cafe/menu/update/1")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(Util.mapToJson(bodyContent)));
+        }catch (MenuItemValueEmpty e) {
+            Assertions.assertEquals(MenuItemValueEmpty.class, e.getClass());
+        }
+    }
+
+    @Test
+    void testPutMenuItemWhenMenuItemValueIsInvalid() throws Exception {
+        when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(invalidValue);
+
+        try {
+            mvc.perform(put("/cafe/menu/update/1")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(Util.mapToJson(bodyContent)));
+        }catch (MenuItemValueInvalid e) {
+            Assertions.assertEquals(MenuItemValueInvalid.class, e.getClass());
+        }
+    }
+
+    @Test
+    void testDeleteMenuItem() throws Exception {
+        mvc.perform(delete("/cafe/menu/delete/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("deleteMenuItem"));
+
+        verify(service, atLeastOnce()).delete(any(String.class));
     }
 
 }
