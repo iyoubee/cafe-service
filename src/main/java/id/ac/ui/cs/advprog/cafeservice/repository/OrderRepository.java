@@ -14,6 +14,6 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     @NonNull
     List<Order> findAll();
     @NonNull
-    Optional<Order> findById(@NonNull String id);
+    Optional<Order> findById(@NonNull Integer id);
     void deleteById(@NonNull String id);
 }

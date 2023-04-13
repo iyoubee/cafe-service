@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = MenuItemController.class)
 @AutoConfigureMockMvc
-class MenuItemControllerTest {
+class OrderControllerTest {
 
     @Autowired
     private MockMvc mvc;
@@ -47,7 +47,7 @@ class MenuItemControllerTest {
 
         menuItem = MenuItem.builder()
             .name("Indomie")
-            .price(null)
+            .price(10000)
             .stock(4)
             .build();
 
@@ -83,7 +83,7 @@ class MenuItemControllerTest {
 
     @Test
     void testChangeStatus() throws Exception {
-        when(service.update(any(String.class), any(OrderRequest.class))).thenReturn(newOrder);
+        when(service.update(any(Integer.class), any(OrderRequest.class))).thenReturn(newOrder);
 
         mvc.perform(put("/cafe/order/update/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -92,12 +92,12 @@ class MenuItemControllerTest {
                 .andExpect(handler().methodName("changeStatus"))
                 .andExpect(jsonPath("$.orderDetails").value(newOrder.getOrderDetailsList().get(0)));
 
-        verify(service, atLeastOnce()).update(any(String.class), any(OrderRequest.class));
+        verify(service, atLeastOnce()).update(any(Integer.class), any(OrderRequest.class));
     }
 
     @Test
     void testChangeStatusWhenOrderRequestValueIsNull() throws Exception {
-        when(service.update(any(String.class), any(OrderRequest.class))).thenReturn(badRequest);
+        when(service.update(any(Integer.class), any(OrderRequest.class))).thenReturn(badRequest);
 
         try {
             mvc.perform(put("/cafe/order/update/1")

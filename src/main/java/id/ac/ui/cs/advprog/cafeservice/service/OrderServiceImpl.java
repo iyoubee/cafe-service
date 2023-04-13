@@ -20,7 +20,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
 
     @Override
-    public Order update(String orderId, OrderRequest request) {
+    public Order update(Integer orderId, OrderRequest request) {
         Optional<Order> getOrder = orderRepository.findById(orderId);
         if (getOrder.isEmpty()) throw new OrderDoesNotExistException(orderId);
         Order getDetail = getOrder.get();
@@ -35,9 +35,9 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order findById(String id) {
+    public Order findById(Integer id) {
         Optional<Order> order = orderRepository.findById(id);
-        if (order.isEmpty()) throw new MenuItemDoesNotExistException(id);
+        if (order.isEmpty()) throw new OrderDoesNotExistException(id);
         return order.get();
     }
 

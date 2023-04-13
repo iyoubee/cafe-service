@@ -8,6 +8,6 @@ import org.springframework.stereotype.Service;
 @Service
 public interface OrderService {
     List<Order> findAll();
-    Order update(String id, OrderRequest request);
-    Order findById(String id);
+    Order update(Integer id, OrderRequest request);
+    Order findById(Integer id);
 }
