@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -94,7 +95,7 @@ class OrderControllerTest {
                         .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("changeStatus"))
-                .andExpect(jsonPath("$.orderDetails").value(newOrder.getOrderDetailsList().get(0)));
+                .andExpect(jsonPath("$.session").value("x98ad8f7w9ws7g9v3"));
 
         verify(service, atLeastOnce()).update(any(Integer.class), any(OrderRequest.class));
     }
@@ -108,7 +109,10 @@ class OrderControllerTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(Util.mapToJson(bodyContent)));
         }catch (BadRequest e) {
-            Assertions.assertEquals(BadRequest.class, e.getClass());
+            String expectedMessage = "400 Bad Request";
+            String actualMessage = e.getMessage();
+
+            assertTrue(actualMessage.contains(expectedMessage));
         }
     }
 }
