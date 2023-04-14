@@ -24,7 +24,7 @@ public class OrderServiceImpl implements OrderService {
         Optional<Order> getOrder = orderRepository.findById(orderId);
         if (getOrder.isEmpty()) throw new OrderDoesNotExistException(orderId);
         Order getDetail = getOrder.get();
-        getDetail.setSession(request.getSession());
+        getDetail.setPc(request.getPc());
         getDetail.setOrderDetailsList(request.getOrderDetailsList());
         return orderRepository.save(getDetail);
     }

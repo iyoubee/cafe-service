@@ -13,6 +13,6 @@ import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderRequest {
-    private String session;
+    private Integer pc;
     private List<OrderDetails> orderDetailsList;
 }
