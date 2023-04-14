@@ -20,8 +20,7 @@ public class Order {
     @Id
     @GeneratedValue
     private Integer id;
-    private String session;
-    @JsonIgnore
+    private Integer pc;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderDetails> orderDetailsList;
 }

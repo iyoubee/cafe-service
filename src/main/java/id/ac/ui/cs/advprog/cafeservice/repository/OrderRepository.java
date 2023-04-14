@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, String> {
+public interface OrderRepository extends JpaRepository<Order, Integer> {
     @NonNull
     List<Order> findAll();
     @NonNull
     Optional<Order> findById(@NonNull Integer id);
-    void deleteById(@NonNull String id);
+    void deleteById(@NonNull Integer id);
 }
