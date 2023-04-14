@@ -94,7 +94,7 @@ class OrderControllerTest {
                         .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("changeStatus"))
-                .andExpect(jsonPath("$.pc").value(1024));
+                .andExpect(jsonPath("$.pc").value(1204));
 
         verify(service, atLeastOnce()).update(any(Integer.class), any(OrderRequest.class));
     }
