@@ -78,7 +78,7 @@ Publish:
     - echo $DOCKER_PASSWORD| docker login -u $REGISTRY_USER --password-stdin docker.io
   script:
     - ls
-    - docker build --build-arg PRODUCTION=prod --build-arg JDBC_DATABASE_PASSWORD=C4fe$upabase --build-arg JDBC_DATABASE_URL=jdbc:postgresql://db.fikkvjcnmpeqbeqrolvq.supabase.co:5432/postgres?user=postgres&password=C4fe$upabase --build-arg JDBC_DATABASE_USERNAME=postgres -t $REGISTRY_USER/$IMAGE_NAME:$IMAGE_TAG .
+    - docker build --build-arg PRODUCTION=$PRODUCTION --build-arg JDBC_DATABASE_PASSWORD=$JDBC_DATABASE_PASSWORD --build-arg JDBC_DATABASE_URL=$JDBC_DATABASE_URL --build-arg JDBC_DATABASE_USERNAME=$JDBC_DATABASE_USERNAME -t $REGISTRY_USER/$IMAGE_NAME:$IMAGE_TAG .
     - docker push $REGISTRY_USER/$IMAGE_NAME:$IMAGE_TAG
   tags:
     - dind
@@ -102,21 +102,17 @@ Deploy:
   only:
     - main
 
-Sonarqube:
-  stage: sonarqube
-  image: gradle:jdk17-alpine
+Sonarcloud:
   variables:
     SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
     GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  stage: sonarcloud
+  image: gradle:jre11-slim
   cache:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
-  before_script:
-    - echo `pwd`
-    - export GRADLE_USER_HOME=`pwd`/.gradle
-  script:
-    - gradle sonarqube -Dsonar.host.url=https://sonarqube.cs.ui.ac.id -Dsonar.login=$SONAR_TOKEN -Dsonar.projectKey=$SONAR_KEY
-  allow_failure: true
+  script: gradle sonarqube
   only:
     - main
+    - develop
