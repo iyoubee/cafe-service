@@ -19,7 +19,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -220,6 +219,16 @@ class MenuItemControllerTest {
         }catch (MenuItemValueInvalid e) {
             Assertions.assertEquals(MenuItemValueInvalid.class, e.getClass());
         }
+    }
+
+    @Test
+    void testDeleteMenuItem() throws Exception {
+        mvc.perform(delete("/cafe/menu/delete/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("deleteMenuItem"));
+
+        verify(service, atLeastOnce()).delete(any(String.class));
     }
 
 }
