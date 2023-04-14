@@ -110,7 +110,7 @@ Sonarcloud:
     paths:
       - .sonar/cache
   script:
-    - sonar-scanner
+    - gradle sonarqube
   only:
     - main
     - develop
