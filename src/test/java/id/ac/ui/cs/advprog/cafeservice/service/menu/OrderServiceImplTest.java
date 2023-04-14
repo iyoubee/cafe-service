@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -65,7 +66,7 @@ class OrderServiceImplTest {
 
         order = Order.builder()
         .id(287952)
-        .pc(12045)
+        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
                 .menuItem(menuItem)
@@ -79,7 +80,7 @@ class OrderServiceImplTest {
         
         newOrder = Order.builder()
         .id(287952)
-        .pc(1204)
+        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
                 .menuItem(menuItem)
@@ -91,7 +92,7 @@ class OrderServiceImplTest {
         .build();
 
         orderRequest = OrderRequest.builder()
-        .pc(1204)
+        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
                 .menuItem(menuItem)
@@ -181,8 +182,8 @@ class OrderServiceImplTest {
     @Test
     void testFindAll() {
         List<Order> orders = List.of(
-                Order.builder().id(1).pc(1).build(),
-                Order.builder().id(2).pc(2).build()
+                Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build()
         );
         when(orderRepository.findAll()).thenReturn(orders);
 

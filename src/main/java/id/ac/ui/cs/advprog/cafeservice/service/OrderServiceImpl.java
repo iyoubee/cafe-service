@@ -35,7 +35,7 @@ public class OrderServiceImpl implements OrderService {
     }
     @Override
     public Order create(OrderRequest request){
-        var order = Order.builder().pc(request.getPc()).build();
+        var order = Order.builder().session(request.getSession()).build();
         request.getOrderDetailsList().forEach(orderDetails -> {
             var menu = menuItemRepository.findById(orderDetails.getMenuItem().getId());
             if (menu.isEmpty()){
@@ -60,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
         Optional<Order> getOrder = orderRepository.findById(orderId);
         if (getOrder.isEmpty()) throw new OrderDoesNotExistException(orderId);
         Order getDetail = getOrder.get();
-        getDetail.setPc(request.getPc());
+        getDetail.setSession(request.getSession());
         getDetail.setOrderDetailsList(request.getOrderDetailsList());
         return orderRepository.save(getDetail);
     }
