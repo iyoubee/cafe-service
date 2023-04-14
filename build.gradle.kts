@@ -10,6 +10,7 @@ sonarqube {
     properties {
         property("sonar.projectKey", "cafe-service")
         property("sonar.organization", "ayyubi0105")
+        property("sonar.host.url", "https://sonarcloud.io")
     }
 }
 
