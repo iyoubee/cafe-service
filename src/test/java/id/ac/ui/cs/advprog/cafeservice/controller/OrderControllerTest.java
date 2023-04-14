@@ -86,6 +86,19 @@ class OrderControllerTest {
     }
 
     @Test
+    void testCreateOrder() throws Exception {
+        when(service.create(any(OrderRequest.class))).thenReturn(newOrder);
+
+        mvc.perform(post("/cafe/order/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("createOrder"));
+
+        verify(service, atLeastOnce()).create(any(OrderRequest.class));
+    }
+
+    @Test
     void testChangeStatus() throws Exception {
         when(service.update(any(Integer.class), any(OrderRequest.class))).thenReturn(newOrder);
 

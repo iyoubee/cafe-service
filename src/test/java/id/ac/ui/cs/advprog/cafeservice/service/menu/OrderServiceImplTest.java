@@ -8,6 +8,7 @@ import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
+import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
@@ -24,6 +25,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -34,24 +36,32 @@ class OrderServiceImplTest {
     private OrderServiceImpl service;
 
     @Mock
-    private OrderRepository repository;
+    private OrderRepository orderRepository;
+
+    @Mock
+    private OrderDetailsRepository orderDetailsRepository;
+
+    @Mock
+    private MenuItemRepository menuItemRepository;
 
     Order order;
 
     Order newOrder;
 
+    OrderDetails newOrderDetails;
+
     MenuItem menuItem;
 
-    OrderRequest updateRequest;
+    OrderRequest orderRequest;
 
     @BeforeEach
     void setUp() {
 
         menuItem = MenuItem.builder()
-            .name("Indomie")
-            .price(10000)
-            .stock(4)
-            .build();
+                .name("Indomie")
+                .price(10000)
+                .stock(4)
+                .build();
 
         order = Order.builder()
         .id(287952)
@@ -80,7 +90,7 @@ class OrderServiceImplTest {
         ))
         .build();
 
-        updateRequest = OrderRequest.builder()
+        orderRequest = OrderRequest.builder()
         .pc(1204)
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
@@ -91,22 +101,125 @@ class OrderServiceImplTest {
                 .build()
         ))
         .build();
+
+        newOrderDetails = OrderDetails.builder()
+                .id(1)
+                .order(order)
+                .menuItem(menuItem)
+                .quantity(2)
+                .totalPrice(20)
+                .status("pending")
+                .build();
+    }
+
+    @Test
+    void testHashCode() {
+        OrderDetails orderDetails1 = OrderDetails.builder()
+                .id(1)
+                .order(new Order())
+                .menuItem(new MenuItem())
+                .quantity(2)
+                .totalPrice(20)
+                .status("pending")
+                .build();
+
+        OrderDetails orderDetails2 = OrderDetails.builder()
+                .id(2)
+                .order(new Order())
+                .menuItem(new MenuItem())
+                .quantity(3)
+                .totalPrice(30)
+                .status("completed")
+                .build();
+
+        assertNotEquals(orderDetails1.hashCode(), orderDetails2.hashCode());
+    }
+
+    @Test
+    void testEquals() {
+        MenuItem menuItem = new MenuItem();
+        Order order = new Order();
+        OrderDetails orderDetails1 = OrderDetails.builder()
+                .id(1)
+                .order(order)
+                .menuItem(menuItem)
+                .quantity(2)
+                .totalPrice(20)
+                .status("pending")
+                .build();
+
+        OrderDetails orderDetails2 = OrderDetails.builder()
+                .id(1)
+                .order(order)
+                .menuItem(menuItem)
+                .quantity(2)
+                .totalPrice(20)
+                .status("pending")
+                .build();
+
+        assertEquals(orderDetails1, orderDetails2);
+    }
+
+    @Test
+    void testToString() {
+        Order order = new Order();
+        MenuItem menuItem = new MenuItem();
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(1)
+                .order(order)
+                .menuItem(menuItem)
+                .quantity(2)
+                .totalPrice(20)
+                .status("pending")
+                .build();
+
+        String expectedString = "OrderDetails(id=1, order=" + order.toString() + ", menuItem=" + menuItem.toString()
+                + ", quantity=2, totalPrice=20, status=pending)";
+        assertEquals(expectedString, orderDetails.toString());
+    }
+
+    @Test
+    void testFindAll() {
+        List<Order> orders = List.of(
+                Order.builder().id(1).pc(1).build(),
+                Order.builder().id(2).pc(2).build()
+        );
+        when(orderRepository.findAll()).thenReturn(orders);
+
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        List<Order> foundOrders = orderService.findAll();
+
+        assertEquals(2, foundOrders.size());
+        assertEquals(orders, foundOrders);
+        verify(orderRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testIsOrderDoesNotExist() {
+        when(orderRepository.findById(1)).thenReturn(Optional.empty());
+        when(orderRepository.findById(2)).thenReturn(Optional.of(Order.builder().id(2).build()));
+
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        assertTrue(orderService.isOrderDoesNotExist(1));
+        assertFalse(orderService.isOrderDoesNotExist(2));
+
+        verify(orderRepository, times(2)).findById(anyInt());
     }
 
     @Test
     void whenUpdateOrderAndFoundShouldReturnTheUpdatedMenuItem() {
-        when(repository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(repository.save(any(Order.class))).thenAnswer(invocation ->
+        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation ->
                 invocation.getArgument(0, Order.class));
 
-        Order result = service.update(287952, updateRequest);
-        verify(repository, atLeastOnce()).save(any(Order.class));
+        Order result = service.update(287952, orderRequest);
+        verify(orderRepository, atLeastOnce()).save(any(Order.class));
         Assertions.assertEquals(newOrder, result);
     }
 
     @Test
     void whenUpdateOrderAndNotFoundShouldThrowException() {
-        when(repository.findById(any(Integer.class))).thenReturn(Optional.empty());
-        Assertions.assertThrows(OrderDoesNotExistException.class, () -> service.update(287952, updateRequest));
+        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
+        Assertions.assertThrows(OrderDoesNotExistException.class, () -> service.update(287952, orderRequest));
     }
 }

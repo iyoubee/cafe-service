@@ -29,6 +29,15 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
+        if(orderRequest.getPc() == null || orderRequest.getOrderDetailsList() == null){
+            throw new BadRequest();
+        } else {
+            Order response = orderService.create(orderRequest);
+            return ResponseEntity.ok(response);
+        }
+    }
     @PutMapping("/update/{id}")
     public ResponseEntity<Order> changeStatus(@PathVariable Integer id, @RequestBody OrderRequest request) {
         if(request.getPc() == null || request.getOrderDetailsList() == null){
