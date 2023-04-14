@@ -31,7 +31,7 @@ public class OrderController {
 
     @PutMapping("/update/{id}")
     public ResponseEntity<Order> changeStatus(@PathVariable Integer id, @RequestBody OrderRequest request) {
-        if(request.getSession() == null || request.getOrderDetailsList() == null){
+        if(request.getPc() == null || request.getOrderDetailsList() == null){
             throw new BadRequest();
         }
         else {
