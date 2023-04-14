@@ -17,7 +17,7 @@ stages:
   - test
   - publish
   - deploy
-  - sonarqube
+  - Sonarcloud
 
 Build:
   stage: build
