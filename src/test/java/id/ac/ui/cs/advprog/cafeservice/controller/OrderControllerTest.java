@@ -55,7 +55,7 @@ class OrderControllerTest {
 
         
         newOrder = Order.builder()
-        .session("x98ad8f7w9ws7g9v3")
+        .pc(1204)
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
                 .menuItem(menuItem)
@@ -67,12 +67,12 @@ class OrderControllerTest {
         .build();
 
         badRequest = Order.builder()
-        .session("x98ad8f7w9ws7g9v3")
+        .pc(1204)
         .orderDetailsList(null)
         .build();
 
         bodyContent = new Object() {
-            public final String session = "x98ad8f7w9ws7g9v3";
+            public final Integer pc = 1204;
 
             public final List<OrderDetails> orderDetails = Arrays.asList(
                 OrderDetails.builder()
@@ -94,7 +94,7 @@ class OrderControllerTest {
                         .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("changeStatus"))
-                .andExpect(jsonPath("$.session").value("x98ad8f7w9ws7g9v3"));
+                .andExpect(jsonPath("$.pc").value(1024));
 
         verify(service, atLeastOnce()).update(any(Integer.class), any(OrderRequest.class));
     }

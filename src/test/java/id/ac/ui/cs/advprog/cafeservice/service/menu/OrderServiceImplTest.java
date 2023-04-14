@@ -55,7 +55,7 @@ class OrderServiceImplTest {
 
         order = Order.builder()
         .id(287952)
-        .session("x98ad8f7w9ws7g9v3")
+        .pc(12045)
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
                 .menuItem(menuItem)
@@ -69,7 +69,7 @@ class OrderServiceImplTest {
         
         newOrder = Order.builder()
         .id(287952)
-        .session("x98ad8f7w9ws7g9v3")
+        .pc(1204)
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
                 .menuItem(menuItem)
@@ -81,7 +81,7 @@ class OrderServiceImplTest {
         .build();
 
         updateRequest = OrderRequest.builder()
-        .session("x98ad8f7w9ws7g9v3")
+        .pc(1204)
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
                 .menuItem(menuItem)
