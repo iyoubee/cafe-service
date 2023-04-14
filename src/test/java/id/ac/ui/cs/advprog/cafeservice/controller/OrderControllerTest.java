@@ -74,7 +74,7 @@ class OrderControllerTest {
         bodyContent = new Object() {
             public final Integer pc = 1204;
 
-            public final List<OrderDetails> orderDetails = Arrays.asList(
+            public final List<OrderDetails> orderDetailsList = Arrays.asList(
                 OrderDetails.builder()
                     .menuItem(menuItem)
                     .quantity(1)
