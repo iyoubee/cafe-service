@@ -60,6 +60,7 @@ class OrderServiceImplTest {
     void setUp() {
 
         menuItem = MenuItem.builder()
+                .id("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10")
                 .name("Indomie")
                 .price(10000)
                 .stock(4)
