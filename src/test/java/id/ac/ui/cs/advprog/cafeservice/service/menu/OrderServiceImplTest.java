@@ -67,42 +67,38 @@ class OrderServiceImplTest {
                 .build();
 
         order = Order.builder()
-        .id(287952)
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
-                .quantity(1)
-                .status("Approved")
-                .totalPrice(10000)
-                .build()
-        ))
-        .build();
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(Arrays.asList(
+                        OrderDetails.builder()
+                                .menuItem(menuItem)
+                                .quantity(1)
+                                .status("Approved")
+                                .totalPrice(10000)
+                                .build()))
+                .build();
 
-        
         newOrder = Order.builder()
-        .id(287952)
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
-                .quantity(1)
-                .status("Cancelled")
-                .totalPrice(10000)
-                .build()
-        ))
-        .build();
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(Arrays.asList(
+                        OrderDetails.builder()
+                                .menuItem(menuItem)
+                                .quantity(1)
+                                .status("Cancelled")
+                                .totalPrice(10000)
+                                .build()))
+                .build();
 
         orderRequest = OrderRequest.builder()
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsData(Arrays.asList(
-            OrderDetailsData.builder()
-                .menuItemId(menuItem.getId())
-                .quantity(1)
-                .status("Cancelled")
-                .build()
-        ))
-        .build();
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsData(Arrays.asList(
+                        OrderDetailsData.builder()
+                                .menuItemId(menuItem.getId())
+                                .quantity(1)
+                                .status("Cancelled")
+                                .build()))
+                .build();
 
         newOrderDetails = OrderDetails.builder()
                 .id(1)
@@ -184,11 +180,11 @@ class OrderServiceImplTest {
     void testFindAll() {
         List<Order> orders = List.of(
                 Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
-                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build()
-        );
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build());
         when(orderRepository.findAll()).thenReturn(orders);
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository,
+                menuItemRepository);
         List<Order> foundOrders = orderService.findAll();
 
         assertEquals(2, foundOrders.size());
@@ -210,9 +206,9 @@ class OrderServiceImplTest {
 
     @Test
     void whenUpdateOrderAndFoundShouldReturnTheUpdatedMenuItem() {
+        when(menuItemRepository.save(any(MenuItem.class))).thenReturn(menuItem);
         when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation ->
-                invocation.getArgument(0, Order.class));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0, Order.class));
 
         Order result = service.update(287952, orderRequest);
         verify(orderRepository, atLeastOnce()).save(any(Order.class));
