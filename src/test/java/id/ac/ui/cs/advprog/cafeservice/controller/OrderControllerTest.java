@@ -16,11 +16,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -48,14 +50,13 @@ class OrderControllerTest {
     void setUp() {
 
         menuItem = MenuItem.builder()
-            .name("Indomie")
-            .price(10000)
-            .stock(4)
-            .build();
-
+        .name("Indomie")
+        .price(10000)
+        .stock(4)
+        .build();
         
         newOrder = Order.builder()
-        .pc(1204)
+        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
                 .menuItem(menuItem)
@@ -67,12 +68,12 @@ class OrderControllerTest {
         .build();
 
         badRequest = Order.builder()
-        .pc(1204)
+        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
         .orderDetailsList(null)
         .build();
 
         bodyContent = new Object() {
-            public final Integer pc = 1204;
+            public final UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 
             public final List<OrderDetails> orderDetailsList = Arrays.asList(
                 OrderDetails.builder()
@@ -86,6 +87,19 @@ class OrderControllerTest {
     }
 
     @Test
+    void testCreateOrder() throws Exception {
+        when(service.create(any(OrderRequest.class))).thenReturn(newOrder);
+
+        mvc.perform(post("/cafe/order/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("createOrder"));
+
+        verify(service, atLeastOnce()).create(any(OrderRequest.class));
+    }
+
+    @Test
     void testChangeStatus() throws Exception {
         when(service.update(any(Integer.class), any(OrderRequest.class))).thenReturn(newOrder);
 
@@ -94,7 +108,7 @@ class OrderControllerTest {
                         .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("changeStatus"))
-                .andExpect(jsonPath("$.pc").value(1204));
+                .andExpect(jsonPath("$.session").value("123e4567-e89b-12d3-a456-426614174000"));
 
         verify(service, atLeastOnce()).update(any(Integer.class), any(OrderRequest.class));
     }

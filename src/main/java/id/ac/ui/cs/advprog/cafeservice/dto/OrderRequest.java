@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
+
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 
 @Data
@@ -13,6 +15,6 @@ import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OrderRequest {
-    private Integer pc;
+    private UUID session;
     private List<OrderDetails> orderDetailsList;
 }
