@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.cafeservice.service.menu;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
+import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
@@ -21,10 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,6 +49,8 @@ class OrderServiceImplTest {
 
     OrderDetails newOrderDetails;
 
+    OrderDetailsData newOrderDetailsData;
+
     MenuItem menuItem;
 
     OrderRequest orderRequest;
@@ -59,10 +59,16 @@ class OrderServiceImplTest {
     void setUp() {
 
         menuItem = MenuItem.builder()
+                .id("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10")
                 .name("Indomie")
                 .price(10000)
                 .stock(4)
                 .build();
+
+        newOrderDetailsData = new OrderDetailsData();
+        newOrderDetailsData.setMenuItemId(menuItem.getId());
+        newOrderDetailsData.setQuantity(0);
+        newOrderDetailsData.setStatus("Approved");
 
         order = Order.builder()
         .id(287952)
@@ -77,7 +83,6 @@ class OrderServiceImplTest {
         ))
         .build();
 
-        
         newOrder = Order.builder()
         .id(287952)
         .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
@@ -93,14 +98,7 @@ class OrderServiceImplTest {
 
         orderRequest = OrderRequest.builder()
         .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
-                .quantity(1)
-                .status("Cancelled")
-                .totalPrice(10000)
-                .build()
-        ))
+        .orderDetailsData(List.of(newOrderDetailsData))
         .build();
 
         newOrderDetails = OrderDetails.builder()
@@ -208,14 +206,12 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenUpdateOrderAndFoundShouldReturnTheUpdatedMenuItem() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation ->
-                invocation.getArgument(0, Order.class));
+    void whenCreateOrderButMenuItemNotFoundShouldThrowException() {
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
 
-        Order result = service.update(287952, orderRequest);
-        verify(orderRepository, atLeastOnce()).save(any(Order.class));
-        Assertions.assertEquals(newOrder, result);
+        assertThrows(MenuItemDoesNotExistException.class, () -> {
+            service.create(orderRequest);
+        });
     }
 
     @Test
