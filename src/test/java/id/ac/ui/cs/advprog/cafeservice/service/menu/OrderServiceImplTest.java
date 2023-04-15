@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.cafeservice.service.menu;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
+import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
@@ -93,12 +94,11 @@ class OrderServiceImplTest {
 
         orderRequest = OrderRequest.builder()
         .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
+        .orderDetailsData(Arrays.asList(
+            OrderDetailsData.builder()
+                .menuItemId(menuItem.getId())
                 .quantity(1)
                 .status("Cancelled")
-                .totalPrice(10000)
                 .build()
         ))
         .build();

@@ -31,7 +31,7 @@ public class OrderController {
 
     @PostMapping("/create")
     public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
-        if(orderRequest.getSession() == null || orderRequest.getOrderDetailsList() == null){
+        if(orderRequest.getSession() == null || orderRequest.getOrderDetailsData() == null){
             throw new BadRequest();
         } else {
             Order response = orderService.create(orderRequest);
@@ -40,7 +40,7 @@ public class OrderController {
     }
     @PutMapping("/update/{id}")
     public ResponseEntity<Order> changeStatus(@PathVariable Integer id, @RequestBody OrderRequest request) {
-        if(request.getSession() == null || request.getOrderDetailsList() == null){
+        if(request.getSession() == null || request.getOrderDetailsData() == null){
             throw new BadRequest();
         }
         else {
