@@ -62,7 +62,7 @@ class OrderServiceImplTest {
     void setUp() {
 
         menuItem = MenuItem.builder()
-                .id("1")
+                .id("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10")
                 .name("Indomie")
                 .price(10000)
                 .stock(4)
@@ -74,35 +74,38 @@ class OrderServiceImplTest {
         newOrderDetailsData.setStatus("Approved");
 
         order = Order.builder()
-        .id(287952)
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
-                .quantity(1)
-                .status("Approved")
-                .totalPrice(10000)
-                .build()
-        ))
-        .build();
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(Arrays.asList(
+                        OrderDetails.builder()
+                                .menuItem(menuItem)
+                                .quantity(1)
+                                .status("Approved")
+                                .totalPrice(10000)
+                                .build()))
+                .build();
 
         newOrder = Order.builder()
-        .id(287952)
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
-                .quantity(1)
-                .status("Cancelled")
-                .totalPrice(10000)
-                .build()
-        ))
-        .build();
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(Arrays.asList(
+                        OrderDetails.builder()
+                                .menuItem(menuItem)
+                                .quantity(1)
+                                .status("Cancelled")
+                                .totalPrice(10000)
+                                .build()))
+                .build();
 
         orderRequest = OrderRequest.builder()
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsData(List.of(newOrderDetailsData))
-        .build();
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsData(Arrays.asList(
+                        OrderDetailsData.builder()
+                                .menuItemId(menuItem.getId())
+                                .quantity(1)
+                                .status("Cancelled")
+                                .build()))
+                .build();
 
         newOrderDetails = OrderDetails.builder()
                 .id(1)
@@ -184,11 +187,11 @@ class OrderServiceImplTest {
     void testFindAll() {
         List<Order> orders = List.of(
                 Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
-                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build()
-        );
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build());
         when(orderRepository.findAll()).thenReturn(orders);
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository,
+                menuItemRepository);
         List<Order> foundOrders = orderService.findAll();
 
         assertEquals(2, foundOrders.size());
@@ -208,8 +211,10 @@ class OrderServiceImplTest {
         verify(orderRepository, times(2)).findById(anyInt());
     }
     @Test
-    void whenCreateOrderButMenuItemNotFoundShouldThrowException() {
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
+    void whenUpdateOrderAndFoundShouldReturnTheUpdatedMenuItem() {
+        when(menuItemRepository.save(any(MenuItem.class))).thenReturn(menuItem);
+        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0, Order.class));
 
         assertThrows(MenuItemDoesNotExistException.class, () -> {
             service.create(orderRequest);
