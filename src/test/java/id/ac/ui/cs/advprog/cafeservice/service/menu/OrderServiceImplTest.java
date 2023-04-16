@@ -21,15 +21,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -90,6 +87,8 @@ class OrderServiceImplTest {
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
                 .orderDetailsList(Arrays.asList(
                         OrderDetails.builder()
+                                .id(287952)
+                                .order(order)
                                 .menuItem(menuItem)
                                 .quantity(1)
                                 .status("Cancelled")
@@ -99,21 +98,16 @@ class OrderServiceImplTest {
 
         orderRequest = OrderRequest.builder()
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-                .orderDetailsData(Arrays.asList(
-                        OrderDetailsData.builder()
-                                .menuItemId(menuItem.getId())
-                                .quantity(1)
-                                .status("Cancelled")
-                                .build()))
+                .orderDetailsData(Arrays.asList(newOrderDetailsData))
                 .build();
 
         newOrderDetails = OrderDetails.builder()
-                .id(1)
+                .id(287952)
                 .order(order)
                 .menuItem(menuItem)
-                .quantity(2)
-                .totalPrice(20)
-                .status("pending")
+                .quantity(1)
+                .totalPrice(10000)
+                .status("Cancelled")
                 .build();
     }
 
@@ -220,6 +214,16 @@ class OrderServiceImplTest {
             service.create(orderRequest);
         });
     }
+
+    @Test
+    void whenUpdateOrderAndFoundShouldReturnTheUpdatedMenuItem() {
+        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
+        Order result = service.update(287952, orderRequest);
+        Assertions.assertEquals(newOrder, result);
+    }
+
 
     @Test
     void whenUpdateOrderAndNotFoundShouldThrowException() {

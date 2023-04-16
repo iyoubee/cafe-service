@@ -12,6 +12,8 @@ import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,15 +32,17 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order findById(Integer id) {
         Optional<Order> order = orderRepository.findById(id);
-        if (order.isEmpty()) throw new OrderDoesNotExistException(id);
+        if (order.isEmpty())
+            throw new OrderDoesNotExistException(id);
         return order.get();
     }
+
     @Override
-    public Order create(OrderRequest request){
+    public Order create(OrderRequest request) {
         var order = Order.builder().session(request.getSession()).build();
         request.getOrderDetailsData().forEach(orderDetails -> {
             var menu = menuItemRepository.findById(orderDetails.getMenuItemId());
-            if (menu.isEmpty()){
+            if (menu.isEmpty()) {
                 throw new MenuItemDoesNotExistException(orderDetails.getMenuItemId());
             }
             orderDetailsRepository.save(
@@ -48,8 +52,7 @@ public class OrderServiceImpl implements OrderService {
                             .quantity(orderDetails.getQuantity())
                             .totalPrice(menu.get().getPrice() * orderDetails.getQuantity())
                             .status(orderDetails.getStatus())
-                            .build()
-            );
+                            .build());
         });
         orderRepository.save(order);
         return order;
@@ -57,30 +60,31 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order update(Integer orderId, OrderRequest request) {
-        if (isOrderDoesNotExist(orderId)){
+        if (isOrderDoesNotExist(orderId)) {
             throw new OrderDoesNotExistException(orderId);
         }
-        var order = Order.builder().session(request.getSession()).build();
+        var order = Order.builder().id(orderId).session(request.getSession()).build();
         var listOfOrderDetails = orderDetailsRepository.findAllByOrderId(orderId);
+        var orderDetailsList = new ArrayList<OrderDetails>();
         request.getOrderDetailsData().forEach(details -> {
             var menu = menuItemRepository.findById(details.getMenuItemId());
-            if (menu.isEmpty()){
+            if (menu.isEmpty()) {
                 throw new MenuItemDoesNotExistException(details.getMenuItemId());
             }
             var orderDetails = orderDetailsRepository.findByOrderIdAndMenuItemId(orderId, menu.get().getId());
             if (orderDetails.isEmpty()) {
-                orderDetailsRepository.save(
+                OrderDetails updated = orderDetailsRepository.save(
                         OrderDetails.builder()
                                 .order(order)
                                 .quantity(details.getQuantity())
                                 .totalPrice(menu.get().getPrice() * details.getQuantity())
                                 .menuItem(menu.get())
                                 .status(details.getStatus())
-                                .build()
-                );
+                                .build());
+                orderDetailsList.add(updated);
             } else {
                 listOfOrderDetails.remove(orderDetails.get());
-                orderDetailsRepository.save(
+                OrderDetails updated = orderDetailsRepository.save(
                         OrderDetails.builder()
                                 .id(orderDetails.get().getId())
                                 .order(order)
@@ -88,17 +92,18 @@ public class OrderServiceImpl implements OrderService {
                                 .totalPrice(menu.get().getPrice() * details.getQuantity())
                                 .menuItem(menu.get())
                                 .status(details.getStatus())
-                                .build()
-                );
+                                .build());
+                orderDetailsList.add(updated);
             }
         });
         orderDetailsRepository.deleteAll(listOfOrderDetails);
+        order.setOrderDetailsList(orderDetailsList);
         return order;
     }
 
     @Override
-    public void delete(Integer id){
-        if (isOrderDoesNotExist(id)){
+    public void delete(Integer id) {
+        if (isOrderDoesNotExist(id)) {
             throw new OrderDoesNotExistException(id);
         } else {
             orderRepository.deleteById(id);
