@@ -215,6 +215,29 @@ class OrderServiceImplTest {
     }
 
     @Test
+void whenUpdateOrderAndFoundShouldReturnTheUpdatedMenuItem() {
+    when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+
+    when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+
+    // Mock orderDetailsRepository methods as needed
+
+    // Mock orderRepository.save to return the updated Order
+    when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0, Order.class));
+
+    // Call the update method
+    Order result = service.update(287952, orderRequest);
+
+    // Verify orderRepository.save was called
+    verify(orderRepository, atLeastOnce()).save(any(Order.class));
+
+    // Assert that the returned Order matches the expected result
+    Assertions.assertEquals(newOrder, result);
+}
+
+
+
+    @Test
     void whenUpdateOrderAndNotFoundShouldThrowException() {
         when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
         Assertions.assertThrows(OrderDoesNotExistException.class, () -> service.update(287952, orderRequest));
