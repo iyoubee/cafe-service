@@ -14,6 +14,7 @@ import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 
+import org.aspectj.weaver.ast.Or;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,8 @@ class OrderServiceImplTest {
     Order order;
 
     Order newOrder;
+
+    Order createdOrder;
 
     OrderDetails newOrderDetails;
 
@@ -84,6 +87,19 @@ class OrderServiceImplTest {
 
         newOrder = Order.builder()
                 .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(Arrays.asList(
+                        OrderDetails.builder()
+                                .id(287952)
+                                .order(order)
+                                .menuItem(menuItem)
+                                .quantity(1)
+                                .status("Cancelled")
+                                .totalPrice(10000)
+                                .build()))
+                .build();
+
+        createdOrder = Order.builder()
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
                 .orderDetailsList(Arrays.asList(
                         OrderDetails.builder()
@@ -192,6 +208,30 @@ class OrderServiceImplTest {
         assertEquals(orders, foundOrders);
         verify(orderRepository, times(1)).findAll();
     }
+    @Test
+    void whenFindByIdWithExistingOrderShouldReturnOrder() {
+        Integer id = 1;
+        Order expectedOrder = new Order(id, UUID.randomUUID(), new ArrayList<>());
+        when(orderRepository.findById(id)).thenReturn(Optional.of(expectedOrder));
+
+        Order result = service.findById(id);
+
+        // Assert
+        assertEquals(expectedOrder, result);
+        verify(orderRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void whenFindByIdWithNonExistingOrderShouldThrowOrderDoesNotExistException() {
+        Integer id = 1;
+        when(orderRepository.findById(id)).thenReturn(Optional.empty());
+        OrderDoesNotExistException exception = assertThrows(OrderDoesNotExistException.class, () -> {
+            service.findById(id);
+        });
+        assertEquals("Order with id " + id + " does not exist", exception.getMessage());
+        verify(orderRepository, times(1)).findById(id);
+    }
+
 
     @Test
     void testIsOrderDoesNotExist() {
@@ -204,11 +244,21 @@ class OrderServiceImplTest {
 
         verify(orderRepository, times(2)).findById(anyInt());
     }
+
     @Test
-    void whenUpdateOrderAndFoundShouldReturnTheUpdatedMenuItem() {
-        when(menuItemRepository.save(any(MenuItem.class))).thenReturn(menuItem);
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0, Order.class));
+    void whenCreateOrderShouldReturnTheCreatedMenuItem() {
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        Order result = service.create(orderRequest);
+
+        verify(orderRepository, atLeastOnce()).save(any(Order.class));
+    }
+
+    @Test
+    void whenCreateOrderButMenuItemNotFoundShouldThrowException() {
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
 
         assertThrows(MenuItemDoesNotExistException.class, () -> {
             service.create(orderRequest);
@@ -230,4 +280,20 @@ class OrderServiceImplTest {
         when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
         Assertions.assertThrows(OrderDoesNotExistException.class, () -> service.update(287952, orderRequest));
     }
+
+    @Test
+    void whenDeleteOrderAndFoundShouldDeleteOrder() {
+        int orderId = 1;
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(Order.builder().id(orderId).build()));
+        service.delete(orderId);
+        verify(orderRepository, times(1)).deleteById(orderId);
+    }
+
+    @Test
+    void whenDeleteOrderAndNotFoundShouldThrowException() {
+        int orderId = 1;
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+        assertThrows(OrderDoesNotExistException.class, () -> service.delete(orderId));
+    }
+
 }
