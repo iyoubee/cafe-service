@@ -22,7 +22,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,7 +62,7 @@ class OrderServiceImplTest {
     void setUp() {
 
         menuItem = MenuItem.builder()
-                .id("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10")
+                .id("1")
                 .name("Indomie")
                 .price(10000)
                 .stock(4)
@@ -204,7 +207,6 @@ class OrderServiceImplTest {
 
         verify(orderRepository, times(2)).findById(anyInt());
     }
-
     @Test
     void whenCreateOrderButMenuItemNotFoundShouldThrowException() {
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
