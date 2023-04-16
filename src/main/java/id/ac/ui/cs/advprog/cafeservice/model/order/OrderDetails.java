@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.cafeservice.model.order;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -16,7 +17,10 @@ public class OrderDetails {
     @Id
     @GeneratedValue
     private Integer id;
-    @ManyToOne
+
+    @JsonBackReference
+    @ManyToOne(cascade = CascadeType.PERSIST)
+    @JoinColumn(name = "order_id")
     private Order order;
     @ManyToOne
     private MenuItem menuItem;

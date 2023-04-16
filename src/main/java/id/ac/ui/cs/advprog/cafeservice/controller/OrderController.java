@@ -31,21 +31,17 @@ public class OrderController {
 
     @PostMapping("/create")
     public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
-        if(orderRequest.getSession() == null || orderRequest.getOrderDetailsList() == null){
-            throw new BadRequest();
-        } else {
-            Order response = orderService.create(orderRequest);
-            return ResponseEntity.ok(response);
-        }
+        Order response = orderService.create(orderRequest);
+        return ResponseEntity.ok(response);
     }
     @PutMapping("/update/{id}")
     public ResponseEntity<Order> changeStatus(@PathVariable Integer id, @RequestBody OrderRequest request) {
-        if(request.getSession() == null || request.getOrderDetailsList() == null){
-            throw new BadRequest();
-        }
-        else {
-            Order response = orderService.update(id, request);
-            return ResponseEntity.ok(response);
-        }
+        Order response = orderService.update(id, request);
+        return ResponseEntity.ok(response);
+    }
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteOrder(@PathVariable Integer id) {
+        orderService.delete(id);
+        return ResponseEntity.ok(String.format("Deleted Order with id %d", id));
     }
 }

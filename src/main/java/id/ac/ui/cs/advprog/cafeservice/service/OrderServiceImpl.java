@@ -12,6 +12,8 @@ import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,44 +32,83 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order findById(Integer id) {
         Optional<Order> order = orderRepository.findById(id);
-        if (order.isEmpty()) throw new OrderDoesNotExistException(id);
+        if (order.isEmpty())
+            throw new OrderDoesNotExistException(id);
         return order.get();
     }
+
     @Override
-    public Order create(OrderRequest request){
+    public Order create(OrderRequest request) {
         var order = Order.builder().session(request.getSession()).build();
-        request.getOrderDetailsList().forEach(orderDetails -> {
-            var menu = menuItemRepository.findById(orderDetails.getMenuItem().getId());
-            if (menu.isEmpty()){
-                throw new MenuItemDoesNotExistException(orderDetails.getMenuItem().getId());
+        List<OrderDetails> orderDetailsList = new ArrayList<>();
+        request.getOrderDetailsData().forEach(orderDetailsData -> {
+            var menuItem = menuItemRepository.findById(orderDetailsData.getMenuItemId());
+            if (menuItem.isEmpty()) {
+                throw new MenuItemDoesNotExistException(orderDetailsData.getMenuItemId());
             }
-            orderDetailsRepository.save(
-                    OrderDetails.builder()
-                            .order(order)
-                            .menuItem(menu.get())
-                            .quantity(orderDetails.getQuantity())
-                            .totalPrice(orderDetails.getTotalPrice())
-                            .status(orderDetails.getStatus())
-                            .build()
-            );
+            OrderDetails orderDetails = OrderDetails.builder()
+                    .menuItem(menuItem.get())
+                    .quantity(orderDetailsData.getQuantity())
+                    .totalPrice(menuItem.get().getPrice() * orderDetailsData.getQuantity())
+                    .status(orderDetailsData.getStatus())
+                    .build();
+            orderDetails.setOrder(order);
+            orderDetailsRepository.save(orderDetails);
+            orderDetailsList.add(orderDetails);
         });
+        order.setOrderDetailsList(orderDetailsList);
         orderRepository.save(order);
         return order;
     }
 
+
+
     @Override
     public Order update(Integer orderId, OrderRequest request) {
-        Optional<Order> getOrder = orderRepository.findById(orderId);
-        if (getOrder.isEmpty()) throw new OrderDoesNotExistException(orderId);
-        Order getDetail = getOrder.get();
-        getDetail.setSession(request.getSession());
-        getDetail.setOrderDetailsList(request.getOrderDetailsList());
-        return orderRepository.save(getDetail);
+        if (isOrderDoesNotExist(orderId)) {
+            throw new OrderDoesNotExistException(orderId);
+        }
+        var order = Order.builder().id(orderId).session(request.getSession()).build();
+        var listOfOrderDetails = orderDetailsRepository.findAllByOrderId(orderId);
+        var orderDetailsList = new ArrayList<OrderDetails>();
+        request.getOrderDetailsData().forEach(details -> {
+            var menu = menuItemRepository.findById(details.getMenuItemId());
+            if (menu.isEmpty()) {
+                throw new MenuItemDoesNotExistException(details.getMenuItemId());
+            }
+            var orderDetails = orderDetailsRepository.findByOrderIdAndMenuItemId(orderId, menu.get().getId());
+            if (orderDetails.isEmpty()) {
+                OrderDetails updated = orderDetailsRepository.save(
+                        OrderDetails.builder()
+                                .order(order)
+                                .quantity(details.getQuantity())
+                                .totalPrice(menu.get().getPrice() * details.getQuantity())
+                                .menuItem(menu.get())
+                                .status(details.getStatus())
+                                .build());
+                orderDetailsList.add(updated);
+            } else {
+                listOfOrderDetails.remove(orderDetails.get());
+                OrderDetails updated = orderDetailsRepository.save(
+                        OrderDetails.builder()
+                                .id(orderDetails.get().getId())
+                                .order(order)
+                                .quantity(details.getQuantity())
+                                .totalPrice(menu.get().getPrice() * details.getQuantity())
+                                .menuItem(menu.get())
+                                .status(details.getStatus())
+                                .build());
+                orderDetailsList.add(updated);
+            }
+        });
+        orderDetailsRepository.deleteAll(listOfOrderDetails);
+        order.setOrderDetailsList(orderDetailsList);
+        return order;
     }
 
     @Override
-    public void delete(Integer id){
-        if (isOrderDoesNotExist(id)){
+    public void delete(Integer id) {
+        if (isOrderDoesNotExist(id)) {
             throw new OrderDoesNotExistException(id);
         } else {
             orderRepository.deleteById(id);

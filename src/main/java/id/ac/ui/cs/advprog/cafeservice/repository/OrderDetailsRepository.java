@@ -6,10 +6,14 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+
 @Repository
 public interface OrderDetailsRepository extends JpaRepository<OrderDetails, Integer> {
     @NonNull
     List<OrderDetails> findAll();
 
     List<OrderDetails> findAllByOrderId(Integer id);
+
+    Optional<OrderDetails> findByOrderIdAndMenuItemId(Integer orderId, String menuItemId);
 }

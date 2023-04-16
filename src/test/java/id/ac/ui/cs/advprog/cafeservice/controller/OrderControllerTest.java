@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.cafeservice.controller;
 
 import id.ac.ui.cs.advprog.cafeservice.Util;
+import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
@@ -16,7 +17,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Arrays;
 import java.util.List;
@@ -59,6 +59,7 @@ class OrderControllerTest {
         .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
         .orderDetailsList(Arrays.asList(
             OrderDetails.builder()
+                .order(newOrder)
                 .menuItem(menuItem)
                 .quantity(1)
                 .status("Approved")
@@ -72,18 +73,35 @@ class OrderControllerTest {
         .orderDetailsList(null)
         .build();
 
+        OrderDetailsData orderDetailsData = new OrderDetailsData();
+        orderDetailsData.setQuantity(1);
+        orderDetailsData.setStatus("Approved");
+
         bodyContent = new Object() {
             public final UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
-
-            public final List<OrderDetails> orderDetailsList = Arrays.asList(
-                OrderDetails.builder()
-                    .menuItem(menuItem)
-                    .quantity(1)
-                    .status("Approved")
-                    .totalPrice(10000)
-                    .build()
-            );
+            public final List<OrderDetailsData> orderDetailsList = Arrays.asList(orderDetailsData);
         };
+
+    }
+
+    @Test
+    void testGetAllOrder() throws Exception {
+        mvc.perform(get("/cafe/order/all")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("getAllOrder"));
+
+        verify(service, atLeastOnce()).findAll();
+    }
+
+    @Test
+    void testGetOrderById() throws Exception {
+        mvc.perform(get("/cafe/order/id/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("getOrderById"));
+
+        verify(service, atLeastOnce()).findById(any(Integer.class));
     }
 
     @Test
@@ -127,5 +145,15 @@ class OrderControllerTest {
 
             assertTrue(actualMessage.contains(expectedMessage));
         }
+    }
+
+    @Test
+    void testDeleteOrder() throws Exception {
+        mvc.perform(delete("/cafe/order/delete/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("deleteOrder"));
+
+        verify(service, atLeastOnce()).delete(any(Integer.class));
     }
 }

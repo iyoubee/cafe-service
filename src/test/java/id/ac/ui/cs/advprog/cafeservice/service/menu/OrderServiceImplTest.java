@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.cafeservice.service.menu;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
+import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
@@ -13,6 +14,7 @@ import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 
+import org.aspectj.weaver.ast.Or;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,15 +22,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Arrays;
+import java.util.*;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -49,7 +48,11 @@ class OrderServiceImplTest {
 
     Order newOrder;
 
+    Order createdOrder;
+
     OrderDetails newOrderDetails;
+
+    OrderDetailsData newOrderDetailsData;
 
     MenuItem menuItem;
 
@@ -59,57 +62,68 @@ class OrderServiceImplTest {
     void setUp() {
 
         menuItem = MenuItem.builder()
+                .id("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10")
                 .name("Indomie")
                 .price(10000)
                 .stock(4)
                 .build();
 
-        order = Order.builder()
-        .id(287952)
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
-                .quantity(1)
-                .status("Approved")
-                .totalPrice(10000)
-                .build()
-        ))
-        .build();
+        newOrderDetailsData = new OrderDetailsData();
+        newOrderDetailsData.setMenuItemId(menuItem.getId());
+        newOrderDetailsData.setQuantity(0);
+        newOrderDetailsData.setStatus("Approved");
 
-        
+        order = Order.builder()
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(Arrays.asList(
+                        OrderDetails.builder()
+                                .menuItem(menuItem)
+                                .quantity(1)
+                                .status("Approved")
+                                .totalPrice(10000)
+                                .build()))
+                .build();
+
         newOrder = Order.builder()
-        .id(287952)
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
-                .quantity(1)
-                .status("Cancelled")
-                .totalPrice(10000)
-                .build()
-        ))
-        .build();
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(Arrays.asList(
+                        OrderDetails.builder()
+                                .id(287952)
+                                .order(order)
+                                .menuItem(menuItem)
+                                .quantity(1)
+                                .status("Cancelled")
+                                .totalPrice(10000)
+                                .build()))
+                .build();
+
+        createdOrder = Order.builder()
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(Arrays.asList(
+                        OrderDetails.builder()
+                                .id(287952)
+                                .order(order)
+                                .menuItem(menuItem)
+                                .quantity(1)
+                                .status("Cancelled")
+                                .totalPrice(10000)
+                                .build()))
+                .build();
 
         orderRequest = OrderRequest.builder()
-        .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-        .orderDetailsList(Arrays.asList(
-            OrderDetails.builder()
-                .menuItem(menuItem)
-                .quantity(1)
-                .status("Cancelled")
-                .totalPrice(10000)
-                .build()
-        ))
-        .build();
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsData(Arrays.asList(newOrderDetailsData))
+                .build();
 
         newOrderDetails = OrderDetails.builder()
-                .id(1)
+                .id(287952)
                 .order(order)
                 .menuItem(menuItem)
-                .quantity(2)
-                .totalPrice(20)
-                .status("pending")
+                .quantity(1)
+                .totalPrice(10000)
+                .status("Cancelled")
                 .build();
     }
 
@@ -183,17 +197,41 @@ class OrderServiceImplTest {
     void testFindAll() {
         List<Order> orders = List.of(
                 Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
-                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build()
-        );
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build());
         when(orderRepository.findAll()).thenReturn(orders);
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository,
+                menuItemRepository);
         List<Order> foundOrders = orderService.findAll();
 
         assertEquals(2, foundOrders.size());
         assertEquals(orders, foundOrders);
         verify(orderRepository, times(1)).findAll();
     }
+    @Test
+    void whenFindByIdWithExistingOrderShouldReturnOrder() {
+        Integer id = 1;
+        Order expectedOrder = new Order(id, UUID.randomUUID(), new ArrayList<>());
+        when(orderRepository.findById(id)).thenReturn(Optional.of(expectedOrder));
+
+        Order result = service.findById(id);
+
+        // Assert
+        assertEquals(expectedOrder, result);
+        verify(orderRepository, times(1)).findById(id);
+    }
+
+    @Test
+    void whenFindByIdWithNonExistingOrderShouldThrowOrderDoesNotExistException() {
+        Integer id = 1;
+        when(orderRepository.findById(id)).thenReturn(Optional.empty());
+        OrderDoesNotExistException exception = assertThrows(OrderDoesNotExistException.class, () -> {
+            service.findById(id);
+        });
+        assertEquals("Order with id " + id + " does not exist", exception.getMessage());
+        verify(orderRepository, times(1)).findById(id);
+    }
+
 
     @Test
     void testIsOrderDoesNotExist() {
@@ -208,19 +246,54 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void whenCreateOrderShouldReturnTheCreatedMenuItem() {
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        Order result = service.create(orderRequest);
+
+        verify(orderRepository, atLeastOnce()).save(any(Order.class));
+    }
+
+    @Test
+    void whenCreateOrderButMenuItemNotFoundShouldThrowException() {
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
+
+        assertThrows(MenuItemDoesNotExistException.class, () -> {
+            service.create(orderRequest);
+        });
+    }
+
+    @Test
     void whenUpdateOrderAndFoundShouldReturnTheUpdatedMenuItem() {
         when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation ->
-                invocation.getArgument(0, Order.class));
-
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
         Order result = service.update(287952, orderRequest);
-        verify(orderRepository, atLeastOnce()).save(any(Order.class));
         Assertions.assertEquals(newOrder, result);
     }
+
 
     @Test
     void whenUpdateOrderAndNotFoundShouldThrowException() {
         when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
         Assertions.assertThrows(OrderDoesNotExistException.class, () -> service.update(287952, orderRequest));
     }
+
+    @Test
+    void whenDeleteOrderAndFoundShouldDeleteOrder() {
+        int orderId = 1;
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(Order.builder().id(orderId).build()));
+        service.delete(orderId);
+        verify(orderRepository, times(1)).deleteById(orderId);
+    }
+
+    @Test
+    void whenDeleteOrderAndNotFoundShouldThrowException() {
+        int orderId = 1;
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+        assertThrows(OrderDoesNotExistException.class, () -> service.delete(orderId));
+    }
+
 }
