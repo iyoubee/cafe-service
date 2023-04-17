@@ -1,7 +1,6 @@
 package id.ac.ui.cs.advprog.cafeservice.controller;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/cafe/order")
@@ -20,6 +20,12 @@ public class OrderController {
     @GetMapping("/all")
     public ResponseEntity<List<Order>> getAllOrder() {
         List<Order> response = orderService.findAll();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{session}")
+    public ResponseEntity<List<Order>> getOrderBySession(@PathVariable String session) {
+        List<Order> response = orderService.findBySession(UUID.fromString(session));
         return ResponseEntity.ok(response);
     }
 
