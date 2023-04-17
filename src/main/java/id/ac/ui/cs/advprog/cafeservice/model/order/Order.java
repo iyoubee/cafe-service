@@ -23,6 +23,6 @@ public class Order {
     @GeneratedValue
     private Integer id;
     private UUID session;
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderDetails> orderDetailsList;
 }

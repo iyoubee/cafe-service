@@ -49,7 +49,7 @@ public class OrderServiceImpl implements OrderService {
                     .menuItem(menuItem.get())
                     .quantity(orderDetailsData.getQuantity())
                     .totalPrice(menuItem.get().getPrice() * orderDetailsData.getQuantity())
-                    .status(orderDetailsData.getStatus())
+                    .status("Menunggu konfirmasi")
                     .build();
             orderDetails.setOrder(order);
             orderDetailsRepository.save(orderDetails);
