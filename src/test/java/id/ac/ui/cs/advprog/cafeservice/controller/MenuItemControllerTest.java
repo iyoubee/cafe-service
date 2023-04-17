@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.cafeservice.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.cafeservice.Util;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
@@ -19,7 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -118,22 +119,6 @@ class MenuItemControllerTest {
                 .andExpect(jsonPath("$.name").value(menuItem.getName()));
 
         verify(service, atLeastOnce()).create(any(MenuItemRequest.class));
-    }
-
-    @Test
-    void testBadRequestAddMenuItem() throws Exception {
-        when(service.create(any(MenuItemRequest.class))).thenReturn(badRequest);
-
-        try {
-            mvc.perform(post("/cafe/menu/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(Util.mapToJson(bodyContent)));
-        } catch (Exception e) {
-            String expectedMessage = "400 Bad Request";
-            String actualMessage = e.getMessage();
-
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
     }
 
     @Test

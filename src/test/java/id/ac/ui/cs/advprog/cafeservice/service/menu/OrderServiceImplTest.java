@@ -274,6 +274,36 @@ class OrderServiceImplTest {
         Assertions.assertEquals(newOrder, result);
     }
 
+    @Test
+    void whenUpdateOrderAndOrderDetailsExistsShouldUpdateOrderDetailsAndReturnUpdatedOrder() {
+        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+        OrderDetails existingOrderDetails = OrderDetails.builder()
+                .id(1)
+                .order(order)
+                .menuItem(menuItem)
+                .quantity(2)
+                .totalPrice(20000)
+                .build();
+        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class)))
+                .thenReturn(Optional.of(existingOrderDetails));
+        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
+        Order result = service.update(287952, orderRequest);
+        verify(orderDetailsRepository, times(1)).deleteAll(anyList());
+        verify(orderDetailsRepository, times(1)).save(any(OrderDetails.class));
+        verify(orderRepository, times(1)).findById(any(Integer.class));
+        verify(menuItemRepository, times(1)).findById(any(String.class));
+        Assertions.assertEquals(newOrder, result);
+    }
+
+    @Test
+    void whenUpdateOrderButMenuItemNotFoundShouldThrowException() {
+        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
+        assertThrows(MenuItemDoesNotExistException.class, () -> {
+            service.update(287952,orderRequest);
+        });
+    }
 
     @Test
     void whenUpdateOrderAndNotFoundShouldThrowException() {
@@ -294,6 +324,22 @@ class OrderServiceImplTest {
         int orderId = 1;
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
         assertThrows(OrderDoesNotExistException.class, () -> service.delete(orderId));
+    }
+
+    @Test
+    void testFindBySession() {
+        UUID session = UUID.randomUUID();
+        List<Order> orders = Arrays.asList(
+                Order.builder().id(1).session(session).build(),
+                Order.builder().id(2).session(session).build());
+        when(orderRepository.findBySession(session)).thenReturn(Optional.of(orders));
+
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        List<Order> foundOrders = orderService.findBySession(session);
+
+        assertEquals(2, foundOrders.size());
+        assertEquals(orders, foundOrders);
+        verify(orderRepository, times(1)).findBySession(session);
     }
 
 }
