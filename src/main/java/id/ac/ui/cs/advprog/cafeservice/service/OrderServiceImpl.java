@@ -1,10 +1,8 @@
 package id.ac.ui.cs.advprog.cafeservice.service;
 
-import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
-import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
@@ -16,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +49,7 @@ public class OrderServiceImpl implements OrderService {
                     .menuItem(menuItem.get())
                     .quantity(orderDetailsData.getQuantity())
                     .totalPrice(menuItem.get().getPrice() * orderDetailsData.getQuantity())
-                    .status(orderDetailsData.getStatus())
+                    .status("Menunggu konfirmasi")
                     .build();
             orderDetails.setOrder(order);
             orderDetailsRepository.save(orderDetails);
@@ -114,6 +113,13 @@ public class OrderServiceImpl implements OrderService {
             orderRepository.deleteById(id);
         }
     }
+
+    @Override
+    public List<Order> findBySession(UUID session) {
+        Optional<List<Order>> orderBySession = orderRepository.findBySession(session);
+        return orderBySession.get();
+    }
+
 
     public boolean isOrderDoesNotExist(Integer id) {
         return orderRepository.findById(id).isEmpty();

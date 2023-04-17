@@ -18,6 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -82,6 +83,21 @@ class OrderControllerTest {
             public final List<OrderDetailsData> orderDetailsList = Arrays.asList(orderDetailsData);
         };
 
+    }
+
+    @Test
+    void testGetOrderBySession() throws Exception {
+        List<Order> listOrder = new ArrayList<>();
+        listOrder.add(newOrder);
+        when(service.findBySession(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))).thenReturn(listOrder);
+
+        mvc.perform(get("/cafe/order/123e4567-e89b-12d3-a456-426614174000")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("getOrderBySession"))
+                .andExpect(jsonPath("$[0].session").value(newOrder.getSession().toString()));
+
+        verify(service, atLeastOnce()).findBySession(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
     }
 
     @Test
