@@ -97,6 +97,7 @@ public class OrderServiceImpl implements OrderService {
                 if (updated.getStatus().equalsIgnoreCase("Selesai")) {
                     try {
                         addToBill(updated);
+                        updated.setStatus("Masuk bill");
                     } catch (JSONException e) {
                         throw new RuntimeException(e);
                     }
@@ -116,6 +117,7 @@ public class OrderServiceImpl implements OrderService {
                 if (updated.getStatus().equalsIgnoreCase("Selesai")) {
                     try {
                         addToBill(updated);
+                        updated.setStatus("Masuk bill");
                     } catch (JSONException e) {
                         throw new RuntimeException(e);
                     }
