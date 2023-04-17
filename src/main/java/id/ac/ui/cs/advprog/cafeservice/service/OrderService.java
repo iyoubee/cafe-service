@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
-import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
-import org.springframework.boot.configurationprocessor.json.JSONException;
 
 @Service
 public interface OrderService {
@@ -18,5 +16,5 @@ public interface OrderService {
     Order create(OrderRequest request);
     Order update(Integer id, OrderRequest request);
     void delete(Integer id);
-    void addToBill(OrderDetails orderDetails) throws JSONException;
+
 }

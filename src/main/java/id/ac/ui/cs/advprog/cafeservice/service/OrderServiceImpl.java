@@ -10,8 +10,8 @@ import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.configurationprocessor.json.JSONException;
-import org.springframework.boot.configurationprocessor.json.JSONObject;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -148,13 +148,12 @@ public class OrderServiceImpl implements OrderService {
     public boolean isOrderDoesNotExist(Integer id) {
         return orderRepository.findById(id).isEmpty();
     }
-    @Override
+
     public void addToBill(OrderDetails orderDetails) throws JSONException {
         int id = 2;
         String url = "http://34.142.223.187/api/v1/invoices/" + id + "/bills";
         RestTemplate restTemplate = new RestTemplate();
         MenuItem orderedMenu = orderDetails.getMenuItem();
-
         JSONObject requestBody = new JSONObject();
 
         requestBody.put("name", orderedMenu.getName());
