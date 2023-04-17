@@ -8,10 +8,18 @@ import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
+import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import lombok.RequiredArgsConstructor;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import org.springframework.web.client.RestTemplate;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -86,6 +94,14 @@ public class OrderServiceImpl implements OrderService {
                                 .status(details.getStatus())
                                 .build());
                 orderDetailsList.add(updated);
+                if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+                    try {
+                        addToBill(updated);
+                        updated.setStatus("Masuk bill");
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
             } else {
                 listOfOrderDetails.remove(orderDetails.get());
                 OrderDetails updated = orderDetailsRepository.save(
@@ -98,6 +114,14 @@ public class OrderServiceImpl implements OrderService {
                                 .status(details.getStatus())
                                 .build());
                 orderDetailsList.add(updated);
+                if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+                    try {
+                        addToBill(updated);
+                        updated.setStatus("Masuk bill");
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
             }
         });
         orderDetailsRepository.deleteAll(listOfOrderDetails);
@@ -124,4 +148,25 @@ public class OrderServiceImpl implements OrderService {
     public boolean isOrderDoesNotExist(Integer id) {
         return orderRepository.findById(id).isEmpty();
     }
+
+    public void addToBill(OrderDetails orderDetails) throws JSONException {
+        int id = 2;
+        String url = "http://34.142.223.187/api/v1/invoices/" + id + "/bills";
+        RestTemplate restTemplate = new RestTemplate();
+        MenuItem orderedMenu = orderDetails.getMenuItem();
+        JSONObject requestBody = new JSONObject();
+
+        requestBody.put("name", orderedMenu.getName());
+        requestBody.put("price", orderedMenu.getPrice());
+        requestBody.put("quantity", orderDetails.getQuantity());
+        requestBody.put("subTotal", (long) orderedMenu.getPrice() * orderDetails.getQuantity());
+        requestBody.put("invoiceId", id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
+        restTemplate.postForObject(url, entity, String.class);
+    }
+
+
 }

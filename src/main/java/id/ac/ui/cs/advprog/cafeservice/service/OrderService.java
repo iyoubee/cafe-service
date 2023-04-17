@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+
 @Service
 public interface OrderService {
     List<Order> findAll();
@@ -15,4 +16,5 @@ public interface OrderService {
     Order create(OrderRequest request);
     Order update(Integer id, OrderRequest request);
     void delete(Integer id);
+
 }
