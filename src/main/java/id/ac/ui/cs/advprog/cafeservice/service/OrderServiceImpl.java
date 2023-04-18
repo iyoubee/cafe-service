@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.cafeservice.service;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.InvalidJSONException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
@@ -12,6 +13,7 @@ import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -30,6 +32,12 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderDetailsRepository orderDetailsRepository;
     private final MenuItemRepository menuItemRepository;
+
+    private RestTemplate restTemplate;
+    @Autowired
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     @Override
     public List<Order> findAll() {
@@ -99,7 +107,7 @@ public class OrderServiceImpl implements OrderService {
                         addToBill(updated);
                         updated.setStatus("Masuk bill");
                     } catch (JSONException e) {
-                        throw new RuntimeException(e);
+                        throw new InvalidJSONException();
                     }
                 }
             } else {
@@ -119,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
                         addToBill(updated);
                         updated.setStatus("Masuk bill");
                     } catch (JSONException e) {
-                        throw new RuntimeException(e);
+                        throw new InvalidJSONException();
                     }
                 }
             }
@@ -152,7 +160,7 @@ public class OrderServiceImpl implements OrderService {
     public void addToBill(OrderDetails orderDetails) throws JSONException {
         int id = 2;
         String url = "http://34.142.223.187/api/v1/invoices/" + id + "/bills";
-        RestTemplate restTemplate = new RestTemplate();
+
         MenuItem orderedMenu = orderDetails.getMenuItem();
         JSONObject requestBody = new JSONObject();
 
