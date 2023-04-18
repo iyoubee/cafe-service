@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.cafeservice.service.menu;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.InvalidJSONException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
@@ -15,13 +16,19 @@ import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 
 import org.aspectj.weaver.ast.Or;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.*;
+import org.springframework.web.client.RestTemplate;
+
 import java.util.*;
 import java.util.List;
 import java.util.Optional;
@@ -340,6 +347,45 @@ class OrderServiceImplTest {
         assertEquals(2, foundOrders.size());
         assertEquals(orders, foundOrders);
         verify(orderRepository, times(1)).findBySession(session);
+    }
+
+    @Test
+    void testAddToBill() throws JSONException {
+        // Create an instance of OrderDetails with some test data
+
+
+        // Set up a mock RestTemplate and a mock response from the server
+        RestTemplate restTemplateMock = Mockito.mock(RestTemplate.class);
+//        ResponseEntity<String> mockResponse = new ResponseEntity<>("{\"status\": \"success\"}", HttpStatus.OK);
+//        Mockito.when(restTemplateMock.postForObject(Mockito.anyString(), Mockito.any(HttpEntity.class), Mockito.any(Class.class)))
+//                .thenReturn(mockResponse);
+
+        // Call the addToBill method with the mock RestTemplate and verify that it sends the expected request
+        int id = 2;
+        String expectedUrl = "http://34.142.223.187/api/v1/invoices/" + id + "/bills";
+        JSONObject expectedRequestBody = new JSONObject();
+        expectedRequestBody.put("name", menuItem.getName());
+        expectedRequestBody.put("price", menuItem.getPrice());
+        expectedRequestBody.put("quantity", newOrderDetails.getQuantity());
+        expectedRequestBody.put("subTotal", (long) menuItem.getPrice() * newOrderDetails.getQuantity());
+        expectedRequestBody.put("invoiceId", id);
+
+        HttpHeaders expectedHeaders = new HttpHeaders();
+        expectedHeaders.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> expectedEntity = new HttpEntity<>(expectedRequestBody.toString(), expectedHeaders);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        orderService.setRestTemplate(restTemplateMock);
+
+        orderService.addToBill(newOrderDetails);
+
+        Mockito.verify(restTemplateMock).postForObject(expectedUrl, expectedEntity, String.class);
+    }
+
+    @Test
+    void whenJSONRequestInvalidShouldThrowException() {
+        String expectedMessage = "Invalid request body";
+        InvalidJSONException exception = new InvalidJSONException();
+        assertEquals(expectedMessage, exception.getMessage());
     }
 
 }

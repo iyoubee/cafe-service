@@ -19,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -216,4 +217,30 @@ class MenuItemControllerTest {
         verify(service, atLeastOnce()).delete(any(String.class));
     }
 
+    @Test
+    void testMenuItemValueInvalid() {
+
+        String invalidValueCategoryName = "price";
+        String expectedMessage = "The value of price is invalid";
+        MenuItemValueInvalid exception = new MenuItemValueInvalid(invalidValueCategoryName);
+        assertEquals(expectedMessage, exception.getMessage());
+
+    }
+
+    @Test
+    void testMenuItemValueEmpty() {
+
+        String emptyValueCategoryName = "name";
+        String expectedMessage = "The menu item name request can't be empty";
+        MenuItemValueEmpty exception = new MenuItemValueEmpty(emptyValueCategoryName);
+        assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @Test
+    void testBadRequest() {
+
+        String expectedMessage = "400 Bad Request";
+        BadRequest exception = new BadRequest();
+        assertEquals(expectedMessage, exception.getMessage());
+    }
 }
