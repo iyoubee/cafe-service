@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.cafeservice.service;
 
+import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.InvalidJSONException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
@@ -34,6 +35,7 @@ public class OrderServiceImpl implements OrderService {
     private final MenuItemRepository menuItemRepository;
 
     private RestTemplate restTemplate;
+
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -76,65 +78,80 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
-
-
     @Override
     public Order update(Integer orderId, OrderRequest request) {
         if (isOrderDoesNotExist(orderId)) {
             throw new OrderDoesNotExistException(orderId);
         }
+
         var order = Order.builder().id(orderId).session(request.getSession()).build();
         var listOfOrderDetails = orderDetailsRepository.findAllByOrderId(orderId);
         var orderDetailsList = new ArrayList<OrderDetails>();
+
         request.getOrderDetailsData().forEach(details -> {
             var menu = menuItemRepository.findById(details.getMenuItemId());
             if (menu.isEmpty()) {
                 throw new MenuItemDoesNotExistException(details.getMenuItemId());
             }
+
             var orderDetails = orderDetailsRepository.findByOrderIdAndMenuItemId(orderId, menu.get().getId());
             if (orderDetails.isEmpty()) {
-                OrderDetails updated = orderDetailsRepository.save(
-                        OrderDetails.builder()
-                                .order(order)
-                                .quantity(details.getQuantity())
-                                .totalPrice(menu.get().getPrice() * details.getQuantity())
-                                .menuItem(menu.get())
-                                .status(details.getStatus())
-                                .build());
-                orderDetailsList.add(updated);
-                if (updated.getStatus().equalsIgnoreCase("Selesai")) {
-                    try {
-                        addToBill(updated);
-                        updated.setStatus("Masuk bill");
-                    } catch (JSONException e) {
-                        throw new InvalidJSONException();
-                    }
-                }
+                orderDetailsList.add(createAndUpdateOrderDetails(order, details, menu.get()));
             } else {
                 listOfOrderDetails.remove(orderDetails.get());
-                OrderDetails updated = orderDetailsRepository.save(
-                        OrderDetails.builder()
-                                .id(orderDetails.get().getId())
-                                .order(order)
-                                .quantity(details.getQuantity())
-                                .totalPrice(menu.get().getPrice() * details.getQuantity())
-                                .menuItem(menu.get())
-                                .status(details.getStatus())
-                                .build());
-                orderDetailsList.add(updated);
-                if (updated.getStatus().equalsIgnoreCase("Selesai")) {
-                    try {
-                        addToBill(updated);
-                        updated.setStatus("Masuk bill");
-                    } catch (JSONException e) {
-                        throw new InvalidJSONException();
-                    }
-                }
+                orderDetailsList.add(updateOrderDetails(order, orderDetails.get(), details, menu.get()));
             }
         });
+
         orderDetailsRepository.deleteAll(listOfOrderDetails);
         order.setOrderDetailsList(orderDetailsList);
         return order;
+    }
+
+    private OrderDetails createAndUpdateOrderDetails(Order order, OrderDetailsData details, MenuItem menuItem) {
+        OrderDetails updated = orderDetailsRepository.save(
+                OrderDetails.builder()
+                        .order(order)
+                        .quantity(details.getQuantity())
+                        .totalPrice(menuItem.getPrice() * details.getQuantity())
+                        .menuItem(menuItem)
+                        .status(details.getStatus())
+                        .build());
+
+        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+            try {
+                addToBill(updated);
+                updated.setStatus("Masuk bill");
+            } catch (JSONException e) {
+                throw new InvalidJSONException();
+            }
+        }
+
+        return updated;
+    }
+
+    private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details,
+            MenuItem menuItem) {
+        OrderDetails updated = orderDetailsRepository.save(
+                OrderDetails.builder()
+                        .id(existingOrderDetails.getId())
+                        .order(order)
+                        .quantity(details.getQuantity())
+                        .totalPrice(menuItem.getPrice() * details.getQuantity())
+                        .menuItem(menuItem)
+                        .status(details.getStatus())
+                        .build());
+
+        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+            try {
+                addToBill(updated);
+                updated.setStatus("Masuk bill");
+            } catch (JSONException e) {
+                throw new InvalidJSONException();
+            }
+        }
+
+        return updated;
     }
 
     @Override
@@ -149,9 +166,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> findBySession(UUID session) {
         Optional<List<Order>> orderBySession = orderRepository.findBySession(session);
-        return orderBySession.get();
+        if (orderBySession.isPresent()) {
+            return orderBySession.get();
+        } else {
+            return new ArrayList<>();
+        }
     }
-
 
     public boolean isOrderDoesNotExist(Integer id) {
         return orderRepository.findById(id).isEmpty();
@@ -175,6 +195,5 @@ public class OrderServiceImpl implements OrderService {
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
         restTemplate.postForObject(url, entity, String.class);
     }
-
 
 }
