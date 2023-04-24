@@ -71,9 +71,20 @@ class MenuItemServiceImplTest {
 
         when(repository.findAll()).thenReturn(allMenuItem);
 
-        List<MenuItem> result = service.findAll();
+        List<MenuItem> result = service.findAll(null);
         verify(repository, atLeastOnce()).findAll();
         Assertions.assertEquals(allMenuItem, result);
+    }
+
+    @Test
+    void whenFindAllMenuItemWithQueryShouldReturnListOfAvailableMenuItem() {
+        List<MenuItem> availableMenuItems = List.of(menuItem);
+
+        when(repository.findByStockGreaterThan(anyInt())).thenReturn(availableMenuItems);
+
+        List<MenuItem> result = service.findAll("available");
+        verify(repository, atLeastOnce()).findByStockGreaterThan(0);
+        Assertions.assertEquals(availableMenuItems, result);
     }
 
     @Test

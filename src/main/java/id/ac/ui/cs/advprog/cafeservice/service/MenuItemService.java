@@ -7,7 +7,7 @@ import java.util.List;
 
 @Service
 public interface MenuItemService {
-    List<MenuItem> findAll();
+    List<MenuItem> findAll(String query);
     MenuItem findById(String id);
     MenuItem create(MenuItemRequest request);
     MenuItem update(String id, MenuItemRequest request);

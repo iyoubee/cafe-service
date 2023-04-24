@@ -64,7 +64,6 @@ class OrderControllerTest {
                 .menuItem(menuItem)
                 .quantity(1)
                 .status("Approved")
-                .totalPrice(10000)
                 .build()
         ))
         .build();
@@ -72,6 +71,7 @@ class OrderControllerTest {
         badRequest = Order.builder()
         .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
         .orderDetailsList(null)
+        .totalPrice(10000)
         .build();
 
         OrderDetailsData orderDetailsData = new OrderDetailsData();
