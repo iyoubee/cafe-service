@@ -38,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final MenuItemRepository menuItemRepository;
 
     private RestTemplate restTemplate;
+
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -96,6 +97,7 @@ public class OrderServiceImpl implements OrderService {
         if (isOrderDoesNotExist(orderId)) {
             throw new OrderDoesNotExistException(orderId);
         }
+
         var order = Order.builder().id(orderId).session(request.getSession()).build();
         var listOfOrderDetails = orderDetailsRepository.findAllByOrderId(orderId);
         var orderDetailsList = new ArrayList<OrderDetails>();
@@ -105,6 +107,7 @@ public class OrderServiceImpl implements OrderService {
             if (menu.isEmpty()) {
                 throw new MenuItemDoesNotExistException(details.getMenuItemId());
             }
+
             var orderDetails = orderDetailsRepository.findByOrderIdAndMenuItemId(orderId, menu.get().getId());
             if (details.getQuantity() > menu.get().getStock() + (orderDetails.isPresent() ? orderDetails.get().getQuantity() : 0)) {
                 throw new MenuItemOutOfStockException(menu.get().getName());
@@ -167,6 +170,52 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
+    private OrderDetails createAndUpdateOrderDetails(Order order, OrderDetailsData details, MenuItem menuItem) {
+        OrderDetails updated = orderDetailsRepository.save(
+                OrderDetails.builder()
+                        .order(order)
+                        .quantity(details.getQuantity())
+                        .totalPrice(menuItem.getPrice() * details.getQuantity())
+                        .menuItem(menuItem)
+                        .status(details.getStatus())
+                        .build());
+
+        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+            try {
+                addToBill(updated);
+                updated.setStatus("Masuk bill");
+            } catch (JSONException e) {
+                throw new InvalidJSONException();
+            }
+        }
+
+        return updated;
+    }
+
+    private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details,
+            MenuItem menuItem) {
+        OrderDetails updated = orderDetailsRepository.save(
+                OrderDetails.builder()
+                        .id(existingOrderDetails.getId())
+                        .order(order)
+                        .quantity(details.getQuantity())
+                        .totalPrice(menuItem.getPrice() * details.getQuantity())
+                        .menuItem(menuItem)
+                        .status(details.getStatus())
+                        .build());
+
+        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+            try {
+                addToBill(updated);
+                updated.setStatus("Masuk bill");
+            } catch (JSONException e) {
+                throw new InvalidJSONException();
+            }
+        }
+
+        return updated;
+    }
+
     @Override
     public void delete(Integer id) {
         if (isOrderDoesNotExist(id)) {
@@ -179,9 +228,12 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> findBySession(UUID session) {
         Optional<List<Order>> orderBySession = orderRepository.findBySession(session);
-        return orderBySession.get();
+        if (orderBySession.isPresent()) {
+            return orderBySession.get();
+        } else {
+            return new ArrayList<>();
+        }
     }
-
 
     public boolean isOrderDoesNotExist(Integer id) {
         return orderRepository.findById(id).isEmpty();
@@ -205,6 +257,5 @@ public class OrderServiceImpl implements OrderService {
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
         restTemplate.postForObject(url, entity, String.class);
     }
-
 
 }
