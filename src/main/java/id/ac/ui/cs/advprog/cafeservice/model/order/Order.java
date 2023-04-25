@@ -22,5 +22,4 @@ public class Order {
     private UUID session;
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderDetails> orderDetailsList;
-    private Integer totalPrice;
 }

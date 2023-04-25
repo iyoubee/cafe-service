@@ -92,7 +92,6 @@ class OrderServiceImplTest {
         order = Order.builder()
                 .id(287952)
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-                .totalPrice(10000)
                 .orderDetailsList(Arrays.asList(
                         OrderDetails.builder()
                                 .menuItem(menuItem)
@@ -104,7 +103,6 @@ class OrderServiceImplTest {
         newOrder = Order.builder()
                 .id(287952)
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-                .totalPrice(10000)
                 .orderDetailsList(Arrays.asList(
                         OrderDetails.builder()
                                 .id(287952)
@@ -117,7 +115,6 @@ class OrderServiceImplTest {
 
         createdOrder = Order.builder()
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-                .totalPrice(10000)
                 .orderDetailsList(Arrays.asList(
                         OrderDetails.builder()
                                 .id(287952)
@@ -221,7 +218,7 @@ class OrderServiceImplTest {
     void whenFindByIdWithExistingOrderShouldReturnOrder() {
         Integer id = 1;
         Integer totalPrice = 10000;
-        Order expectedOrder = new Order(id, UUID.randomUUID(), new ArrayList<>(), totalPrice);
+        Order expectedOrder = new Order(id, UUID.randomUUID(), new ArrayList<>());
         when(orderRepository.findById(id)).thenReturn(Optional.of(expectedOrder));
 
         Order result = service.findById(id);
@@ -303,7 +300,6 @@ class OrderServiceImplTest {
         Order order = Order.builder()
                 .id(1)
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-                .totalPrice(20000)
                 .orderDetailsList(orderDetailsList)
                 .build();
 
@@ -340,7 +336,6 @@ class OrderServiceImplTest {
         Order orderUpdated = Order.builder()
                 .id(1)
                 .session(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"))
-                .totalPrice(20000)
                 .orderDetailsList(orderDetailsListUpdated)
                 .build();
 
@@ -418,7 +413,6 @@ class OrderServiceImplTest {
         verify(menuItemService).update(any(String.class), any(MenuItemRequest.class));
 
         // Verify the result
-        assertEquals(2 * menuItem.getPrice(), updatedOrder.getTotalPrice());
         assertEquals(1, updatedOrder.getOrderDetailsList().size());
     }
 
@@ -475,7 +469,7 @@ class OrderServiceImplTest {
         List<Order> emptyOrders = new ArrayList<>();
         when(orderRepository.findBySession(session)).thenReturn(Optional.of(emptyOrders));
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
         List<Order> foundOrders = orderService.findBySession(session);
 
         assertEquals(0, foundOrders.size());

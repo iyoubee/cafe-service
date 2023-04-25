@@ -61,7 +61,6 @@ public class OrderServiceImpl implements OrderService {
     public Order create(OrderRequest request) {
         var order = Order.builder().session(request.getSession()).build();
         List<OrderDetails> orderDetailsList = new ArrayList<>();
-        int totalPrice = 0;
         for (OrderDetailsData orderDetailsData : request.getOrderDetailsData()) {
             var menuItem = menuItemRepository.findById(orderDetailsData.getMenuItemId());
             if (menuItem.isEmpty()) {
@@ -75,7 +74,6 @@ public class OrderServiceImpl implements OrderService {
                     .quantity(orderDetailsData.getQuantity())
                     .status("Menunggu konfirmasi")
                     .build();
-            totalPrice += menuItem.get().getPrice() * orderDetailsData.getQuantity();
             MenuItemRequest menuItemRequest = MenuItemRequest.builder()
                     .name(menuItem.get().getName())
                     .price(menuItem.get().getPrice())
@@ -87,7 +85,6 @@ public class OrderServiceImpl implements OrderService {
             orderDetailsList.add(orderDetails);
         }
         order.setOrderDetailsList(orderDetailsList);
-        order.setTotalPrice(totalPrice);
         orderRepository.save(order);
         return order;
     }
@@ -97,76 +94,52 @@ public class OrderServiceImpl implements OrderService {
         if (isOrderDoesNotExist(orderId)) {
             throw new OrderDoesNotExistException(orderId);
         }
-
         var order = Order.builder().id(orderId).session(request.getSession()).build();
         var listOfOrderDetails = orderDetailsRepository.findAllByOrderId(orderId);
         var orderDetailsList = new ArrayList<OrderDetails>();
-        int totalPrice = 0;
         for (OrderDetailsData details : request.getOrderDetailsData()) {
             var menu = menuItemRepository.findById(details.getMenuItemId());
             if (menu.isEmpty()) {
                 throw new MenuItemDoesNotExistException(details.getMenuItemId());
             }
-
             var orderDetails = orderDetailsRepository.findByOrderIdAndMenuItemId(orderId, menu.get().getId());
             if (details.getQuantity() > menu.get().getStock() + (orderDetails.isPresent() ? orderDetails.get().getQuantity() : 0)) {
                 throw new MenuItemOutOfStockException(menu.get().getName());
             }
             if (orderDetails.isEmpty()) {
-                OrderDetails updated = orderDetailsRepository.save(
-                        OrderDetails.builder()
-                                .order(order)
-                                .quantity(details.getQuantity())
-                                .menuItem(menu.get())
-                                .status(details.getStatus())
-                                .build());
-                orderDetailsList.add(updated);
+                orderDetailsList.add(createAndUpdateOrderDetails(order, details, menu.get()));
                 MenuItemRequest menuItemRequest = MenuItemRequest.builder()
                         .name(menu.get().getName())
                         .price(menu.get().getPrice())
                         .stock(menu.get().getStock() - details.getQuantity())
                         .build();
                 menuItemService.update(menu.get().getId(), menuItemRequest);
-                if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
-                    try {
-                        addToBill(updated);
-                        updated.setStatus("Masuk bill");
-                    } catch (JSONException e) {
-                        throw new InvalidJSONException();
-                    }
-                }
             } else {
                 int olderOrderQuantity = orderDetails.get().getQuantity();
                 listOfOrderDetails.remove(orderDetails.get());
-                OrderDetails updated = orderDetailsRepository.save(
-                        OrderDetails.builder()
-                                .id(orderDetails.get().getId())
-                                .order(order)
-                                .quantity(details.getQuantity())
-                                .menuItem(menu.get())
-                                .status(details.getStatus())
-                                .build());
-                orderDetailsList.add(updated);
-                MenuItemRequest menuItemRequest = MenuItemRequest.builder()
-                        .name(menu.get().getName())
-                        .price(menu.get().getPrice())
-                        .stock(menu.get().getStock() + olderOrderQuantity - details.getQuantity())
-                        .build();
-                menuItemService.update(menu.get().getId(), menuItemRequest);
-                if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
-                    try {
-                        addToBill(updated);
-                        updated.setStatus("Masuk bill");
-                    } catch (JSONException e) {
-                        throw new InvalidJSONException();
-                    }
+                orderDetailsList.add(updateOrderDetails(order, orderDetails.get(), details, menu.get()));
+                if (orderDetails.get().getStatus().equalsIgnoreCase("Dibatalkan")){
+                    continue;
                 }
+                MenuItemRequest menuItemRequest;
+                if (details.getStatus().equalsIgnoreCase("Dibatalkan")){
+                    menuItemRequest = MenuItemRequest.builder()
+                            .name(menu.get().getName())
+                            .price(menu.get().getPrice())
+                            .stock(menu.get().getStock() + olderOrderQuantity)
+                            .build();
+                } else {
+                    menuItemRequest = MenuItemRequest.builder()
+                            .name(menu.get().getName())
+                            .price(menu.get().getPrice())
+                            .stock(menu.get().getStock() + olderOrderQuantity - details.getQuantity())
+                            .build();
+                }
+                menuItemService.update(menu.get().getId(), menuItemRequest);
             }
-            totalPrice += menu.get().getPrice() * details.getQuantity();
         };
         orderDetailsRepository.deleteAll(listOfOrderDetails);
         order.setOrderDetailsList(orderDetailsList);
-        order.setTotalPrice(totalPrice);
         return order;
     }
 
@@ -175,12 +148,11 @@ public class OrderServiceImpl implements OrderService {
                 OrderDetails.builder()
                         .order(order)
                         .quantity(details.getQuantity())
-                        .totalPrice(menuItem.getPrice() * details.getQuantity())
                         .menuItem(menuItem)
                         .status(details.getStatus())
                         .build());
 
-        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+        if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
             try {
                 addToBill(updated);
                 updated.setStatus("Masuk bill");
@@ -194,17 +166,21 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details,
             MenuItem menuItem) {
-        OrderDetails updated = orderDetailsRepository.save(
-                OrderDetails.builder()
-                        .id(existingOrderDetails.getId())
-                        .order(order)
-                        .quantity(details.getQuantity())
-                        .totalPrice(menuItem.getPrice() * details.getQuantity())
-                        .menuItem(menuItem)
-                        .status(details.getStatus())
-                        .build());
+        OrderDetails updated;
+        if (existingOrderDetails.getStatus().equalsIgnoreCase("Dibatalkan")){
+            updated = existingOrderDetails;
+        } else {
+             updated = orderDetailsRepository.save(
+                    OrderDetails.builder()
+                            .id(existingOrderDetails.getId())
+                            .order(order)
+                            .quantity(details.getQuantity())
+                            .menuItem(menuItem)
+                            .status(details.getStatus())
+                            .build());
+        }
 
-        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+        if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
             try {
                 addToBill(updated);
                 updated.setStatus("Masuk bill");

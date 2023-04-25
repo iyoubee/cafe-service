@@ -71,7 +71,6 @@ class OrderControllerTest {
         badRequest = Order.builder()
         .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
         .orderDetailsList(null)
-        .totalPrice(10000)
         .build();
 
         OrderDetailsData orderDetailsData = new OrderDetailsData();
