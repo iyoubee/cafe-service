@@ -350,6 +350,20 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void whenFindBySessionNotExist() {
+        UUID session = UUID.randomUUID();
+        List<Order> emptyOrders = new ArrayList<>();
+        when(orderRepository.findBySession(session)).thenReturn(Optional.of(emptyOrders));
+
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemRepository);
+        List<Order> foundOrders = orderService.findBySession(session);
+
+        assertEquals(0, foundOrders.size());
+        assertEquals(emptyOrders, foundOrders);
+        verify(orderRepository, times(1)).findBySession(session);
+    }
+
+    @Test
     void testAddToBill() throws JSONException {
         // Create an instance of OrderDetails with some test data
 
