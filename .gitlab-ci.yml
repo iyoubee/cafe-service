@@ -111,6 +111,7 @@ Sonarcloud:
       - .sonar/cache
   script:
     - gradle sonarqube
+    - gradle test jacocoTestReport sonarqube
   only:
     - main
     - develop
