@@ -25,6 +25,5 @@ public class OrderDetails {
     @ManyToOne
     private MenuItem menuItem;
     private Integer quantity;
-    private Integer totalPrice;
     private String status;
 }

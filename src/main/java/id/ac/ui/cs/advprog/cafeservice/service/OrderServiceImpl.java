@@ -1,9 +1,11 @@
 package id.ac.ui.cs.advprog.cafeservice.service;
 
+import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.InvalidJSONException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemOutOfStockException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
@@ -32,6 +34,7 @@ import java.util.UUID;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderDetailsRepository orderDetailsRepository;
+    private final MenuItemService menuItemService;
     private final MenuItemRepository menuItemRepository;
 
     private RestTemplate restTemplate;
@@ -58,21 +61,29 @@ public class OrderServiceImpl implements OrderService {
     public Order create(OrderRequest request) {
         var order = Order.builder().session(request.getSession()).build();
         List<OrderDetails> orderDetailsList = new ArrayList<>();
-        request.getOrderDetailsData().forEach(orderDetailsData -> {
+        for (OrderDetailsData orderDetailsData : request.getOrderDetailsData()) {
             var menuItem = menuItemRepository.findById(orderDetailsData.getMenuItemId());
             if (menuItem.isEmpty()) {
                 throw new MenuItemDoesNotExistException(orderDetailsData.getMenuItemId());
             }
+            if (orderDetailsData.getQuantity() > menuItem.get().getStock()) {
+                throw new MenuItemOutOfStockException(menuItem.get().getName());
+            }
             OrderDetails orderDetails = OrderDetails.builder()
                     .menuItem(menuItem.get())
                     .quantity(orderDetailsData.getQuantity())
-                    .totalPrice(menuItem.get().getPrice() * orderDetailsData.getQuantity())
                     .status("Menunggu konfirmasi")
                     .build();
+            MenuItemRequest menuItemRequest = MenuItemRequest.builder()
+                    .name(menuItem.get().getName())
+                    .price(menuItem.get().getPrice())
+                    .stock(menuItem.get().getStock() - orderDetailsData.getQuantity())
+                    .build();
+            menuItemService.update(menuItem.get().getId(), menuItemRequest);
             orderDetails.setOrder(order);
             orderDetailsRepository.save(orderDetails);
             orderDetailsList.add(orderDetails);
-        });
+        }
         order.setOrderDetailsList(orderDetailsList);
         orderRepository.save(order);
         return order;
@@ -83,26 +94,50 @@ public class OrderServiceImpl implements OrderService {
         if (isOrderDoesNotExist(orderId)) {
             throw new OrderDoesNotExistException(orderId);
         }
-
         var order = Order.builder().id(orderId).session(request.getSession()).build();
         var listOfOrderDetails = orderDetailsRepository.findAllByOrderId(orderId);
         var orderDetailsList = new ArrayList<OrderDetails>();
-
-        request.getOrderDetailsData().forEach(details -> {
+        for (OrderDetailsData details : request.getOrderDetailsData()) {
             var menu = menuItemRepository.findById(details.getMenuItemId());
             if (menu.isEmpty()) {
                 throw new MenuItemDoesNotExistException(details.getMenuItemId());
             }
-
             var orderDetails = orderDetailsRepository.findByOrderIdAndMenuItemId(orderId, menu.get().getId());
+            if (details.getQuantity() > menu.get().getStock() + (orderDetails.isPresent() ? orderDetails.get().getQuantity() : 0)) {
+                throw new MenuItemOutOfStockException(menu.get().getName());
+            }
             if (orderDetails.isEmpty()) {
                 orderDetailsList.add(createAndUpdateOrderDetails(order, details, menu.get()));
+                MenuItemRequest menuItemRequest = MenuItemRequest.builder()
+                        .name(menu.get().getName())
+                        .price(menu.get().getPrice())
+                        .stock(menu.get().getStock() - details.getQuantity())
+                        .build();
+                menuItemService.update(menu.get().getId(), menuItemRequest);
             } else {
+                int olderOrderQuantity = orderDetails.get().getQuantity();
                 listOfOrderDetails.remove(orderDetails.get());
                 orderDetailsList.add(updateOrderDetails(order, orderDetails.get(), details, menu.get()));
+                if (orderDetails.get().getStatus().equalsIgnoreCase("Dibatalkan")){
+                    continue;
+                }
+                MenuItemRequest menuItemRequest;
+                if (details.getStatus().equalsIgnoreCase("Dibatalkan")){
+                    menuItemRequest = MenuItemRequest.builder()
+                            .name(menu.get().getName())
+                            .price(menu.get().getPrice())
+                            .stock(menu.get().getStock() + olderOrderQuantity)
+                            .build();
+                } else {
+                    menuItemRequest = MenuItemRequest.builder()
+                            .name(menu.get().getName())
+                            .price(menu.get().getPrice())
+                            .stock(menu.get().getStock() + olderOrderQuantity - details.getQuantity())
+                            .build();
+                }
+                menuItemService.update(menu.get().getId(), menuItemRequest);
             }
-        });
-
+        };
         orderDetailsRepository.deleteAll(listOfOrderDetails);
         order.setOrderDetailsList(orderDetailsList);
         return order;
@@ -113,12 +148,11 @@ public class OrderServiceImpl implements OrderService {
                 OrderDetails.builder()
                         .order(order)
                         .quantity(details.getQuantity())
-                        .totalPrice(menuItem.getPrice() * details.getQuantity())
                         .menuItem(menuItem)
                         .status(details.getStatus())
                         .build());
 
-        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+        if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
             try {
                 addToBill(updated);
                 updated.setStatus("Masuk bill");
@@ -132,17 +166,21 @@ public class OrderServiceImpl implements OrderService {
 
     private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details,
             MenuItem menuItem) {
-        OrderDetails updated = orderDetailsRepository.save(
-                OrderDetails.builder()
-                        .id(existingOrderDetails.getId())
-                        .order(order)
-                        .quantity(details.getQuantity())
-                        .totalPrice(menuItem.getPrice() * details.getQuantity())
-                        .menuItem(menuItem)
-                        .status(details.getStatus())
-                        .build());
+        OrderDetails updated;
+        if (existingOrderDetails.getStatus().equalsIgnoreCase("Dibatalkan")){
+            updated = existingOrderDetails;
+        } else {
+             updated = orderDetailsRepository.save(
+                    OrderDetails.builder()
+                            .id(existingOrderDetails.getId())
+                            .order(order)
+                            .quantity(details.getQuantity())
+                            .menuItem(menuItem)
+                            .status(details.getStatus())
+                            .build());
+        }
 
-        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+        if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
             try {
                 addToBill(updated);
                 updated.setStatus("Masuk bill");
