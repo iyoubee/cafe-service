@@ -86,7 +86,7 @@ class MenuItemControllerTest {
     void testGetAllMenuItem() throws Exception {
         List<MenuItem> allMenuItem = List.of(menuItem);
 
-        when(service.findAll()).thenReturn(allMenuItem);
+        when(service.findAll(null)).thenReturn(allMenuItem);
 
         mvc.perform(get("/cafe/menu/all")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -94,8 +94,24 @@ class MenuItemControllerTest {
                 .andExpect(handler().methodName("getAllMenuItem"))
                 .andExpect(jsonPath("$[0].name").value(menuItem.getName()));
 
-        verify(service, atLeastOnce()).findAll();
+        verify(service, atLeastOnce()).findAll(null);
     }
+
+    @Test
+    void testGetAvailableMenuItem() throws Exception {
+        List<MenuItem> availableMenuItem = List.of(menuItem);
+
+        when(service.findAll("available")).thenReturn(availableMenuItem);
+
+        mvc.perform(get("/cafe/menu/all?query=available")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("getAllMenuItem"))
+                .andExpect(jsonPath("$[0].name").value(menuItem.getName()));
+
+        verify(service, atLeastOnce()).findAll("available");
+    }
+
 
     @Test
     void testGetMenuItemById() throws Exception {
