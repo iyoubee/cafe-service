@@ -1,7 +1,4 @@
 package id.ac.ui.cs.advprog.cafeservice.model.order;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
