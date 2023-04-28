@@ -115,7 +115,6 @@ public class OrderServiceImpl implements OrderService {
                 orderDetailsList.add(createAndUpdateOrderDetails(order, details, menu.get()));
 
             } else {
-                int olderOrderQuantity = orderDetails.get().getQuantity();
                 listOfOrderDetails.remove(orderDetails.get());
                 orderDetailsList.add(updateOrderDetails(order, orderDetails.get(), details, menu.get()));
             }
@@ -154,7 +153,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details, MenuItem menuItem) {
-        int olderOrderQuantity = existingOrderDetails.getQuantity();
 
         if (existingOrderDetails.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
             return existingOrderDetails;
@@ -184,13 +182,13 @@ public class OrderServiceImpl implements OrderService {
                 menuItemRequest = MenuItemRequest.builder()
                         .name(menuItem.getName())
                         .price(menuItem.getPrice())
-                        .stock(menuItem.getStock() + olderOrderQuantity)
+                        .stock(menuItem.getStock() + existingOrderDetails.getQuantity())
                         .build();
             } else {
                 menuItemRequest = MenuItemRequest.builder()
                         .name(menuItem.getName())
                         .price(menuItem.getPrice())
-                        .stock(menuItem.getStock() + olderOrderQuantity - details.getQuantity())
+                        .stock(menuItem.getStock() + existingOrderDetails.getQuantity() - details.getQuantity())
                         .build();
             }
             menuItemService.update(menuItem.getId(), menuItemRequest);
@@ -211,11 +209,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> findBySession(UUID session) {
         Optional<List<Order>> orderBySession = orderRepository.findBySession(session);
-        if (orderBySession.isPresent()) {
-            return orderBySession.get();
-        } else {
-            return new ArrayList<>();
-        }
+        return orderBySession.orElseGet(ArrayList::new);
     }
 
     public boolean isOrderDoesNotExist(Integer id) {
