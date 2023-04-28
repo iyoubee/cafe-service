@@ -115,6 +115,7 @@ public class OrderServiceImpl implements OrderService {
                 orderDetailsList.add(createAndUpdateOrderDetails(order, details, menu.get()));
 
             } else {
+                int olderOrderQuantity = orderDetails.get().getQuantity();
                 listOfOrderDetails.remove(orderDetails.get());
                 orderDetailsList.add(updateOrderDetails(order, orderDetails.get(), details, menu.get()));
             }
