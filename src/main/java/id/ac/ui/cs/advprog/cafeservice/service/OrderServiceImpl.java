@@ -38,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final MenuItemRepository menuItemRepository;
 
     private RestTemplate restTemplate;
+    private static final String CANCELLED_STATUS = "Dibatalkan";
 
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
@@ -94,50 +95,30 @@ public class OrderServiceImpl implements OrderService {
         if (isOrderDoesNotExist(orderId)) {
             throw new OrderDoesNotExistException(orderId);
         }
+
         var order = Order.builder().id(orderId).session(request.getSession()).build();
         var listOfOrderDetails = orderDetailsRepository.findAllByOrderId(orderId);
         var orderDetailsList = new ArrayList<OrderDetails>();
+
         for (OrderDetailsData details : request.getOrderDetailsData()) {
             var menu = menuItemRepository.findById(details.getMenuItemId());
             if (menu.isEmpty()) {
                 throw new MenuItemDoesNotExistException(details.getMenuItemId());
             }
+
             var orderDetails = orderDetailsRepository.findByOrderIdAndMenuItemId(orderId, menu.get().getId());
             if (details.getQuantity() > menu.get().getStock() + (orderDetails.isPresent() ? orderDetails.get().getQuantity() : 0)) {
                 throw new MenuItemOutOfStockException(menu.get().getName());
             }
+
             if (orderDetails.isEmpty()) {
                 orderDetailsList.add(createAndUpdateOrderDetails(order, details, menu.get()));
-                MenuItemRequest menuItemRequest = MenuItemRequest.builder()
-                        .name(menu.get().getName())
-                        .price(menu.get().getPrice())
-                        .stock(menu.get().getStock() - details.getQuantity())
-                        .build();
-                menuItemService.update(menu.get().getId(), menuItemRequest);
+
             } else {
-                int olderOrderQuantity = orderDetails.get().getQuantity();
                 listOfOrderDetails.remove(orderDetails.get());
                 orderDetailsList.add(updateOrderDetails(order, orderDetails.get(), details, menu.get()));
-                if (orderDetails.get().getStatus().equalsIgnoreCase("Dibatalkan")){
-                    continue;
-                }
-                MenuItemRequest menuItemRequest;
-                if (details.getStatus().equalsIgnoreCase("Dibatalkan")){
-                    menuItemRequest = MenuItemRequest.builder()
-                            .name(menu.get().getName())
-                            .price(menu.get().getPrice())
-                            .stock(menu.get().getStock() + olderOrderQuantity)
-                            .build();
-                } else {
-                    menuItemRequest = MenuItemRequest.builder()
-                            .name(menu.get().getName())
-                            .price(menu.get().getPrice())
-                            .stock(menu.get().getStock() + olderOrderQuantity - details.getQuantity())
-                            .build();
-                }
-                menuItemService.update(menu.get().getId(), menuItemRequest);
             }
-        };
+        }
         orderDetailsRepository.deleteAll(listOfOrderDetails);
         order.setOrderDetailsList(orderDetailsList);
         return order;
@@ -161,24 +142,31 @@ public class OrderServiceImpl implements OrderService {
             }
         }
 
+        MenuItemRequest menuItemRequest = MenuItemRequest.builder()
+                .name(menuItem.getName())
+                .price(menuItem.getPrice())
+                .stock(menuItem.getStock() - details.getQuantity())
+                .build();
+        menuItemService.update(menuItem.getId(), menuItemRequest);
+
         return updated;
     }
 
-    private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details,
-            MenuItem menuItem) {
-        OrderDetails updated;
-        if (existingOrderDetails.getStatus().equalsIgnoreCase("Dibatalkan")){
-            updated = existingOrderDetails;
-        } else {
-             updated = orderDetailsRepository.save(
-                    OrderDetails.builder()
-                            .id(existingOrderDetails.getId())
-                            .order(order)
-                            .quantity(details.getQuantity())
-                            .menuItem(menuItem)
-                            .status(details.getStatus())
-                            .build());
+    private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details, MenuItem menuItem) {
+        int olderOrderQuantity = existingOrderDetails.getQuantity();
+
+        if (existingOrderDetails.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
+            return existingOrderDetails;
         }
+
+        OrderDetails updated = orderDetailsRepository.save(
+                OrderDetails.builder()
+                        .id(existingOrderDetails.getId())
+                        .order(order)
+                        .quantity(details.getQuantity())
+                        .menuItem(menuItem)
+                        .status(details.getStatus())
+                        .build());
 
         if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
             try {
@@ -187,6 +175,24 @@ public class OrderServiceImpl implements OrderService {
             } catch (JSONException e) {
                 throw new InvalidJSONException();
             }
+        }
+
+        if (!existingOrderDetails.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
+            MenuItemRequest menuItemRequest;
+            if (details.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
+                menuItemRequest = MenuItemRequest.builder()
+                        .name(menuItem.getName())
+                        .price(menuItem.getPrice())
+                        .stock(menuItem.getStock() + olderOrderQuantity)
+                        .build();
+            } else {
+                menuItemRequest = MenuItemRequest.builder()
+                        .name(menuItem.getName())
+                        .price(menuItem.getPrice())
+                        .stock(menuItem.getStock() + olderOrderQuantity - details.getQuantity())
+                        .build();
+            }
+            menuItemService.update(menuItem.getId(), menuItemRequest);
         }
 
         return updated;
