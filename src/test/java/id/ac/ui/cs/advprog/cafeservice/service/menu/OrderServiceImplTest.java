@@ -60,9 +60,6 @@ class OrderServiceImplTest {
     @Mock
     private MenuItemService menuItemService;
 
-    @Mock
-    RestTemplate restTemplate;
-
     Order order;
 
     Order newOrder;
@@ -270,7 +267,7 @@ class OrderServiceImplTest {
         when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
-        Order result = service.create(orderRequest);
+        Order result = service.create(orderRequest, null);
 
         verify(orderRepository, atLeastOnce()).save(any(Order.class));
     }
@@ -280,7 +277,7 @@ class OrderServiceImplTest {
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
 
         assertThrows(MenuItemDoesNotExistException.class, () -> {
-            service.create(orderRequest);
+            service.create(orderRequest, null);
         });
     }
 
@@ -296,9 +293,39 @@ class OrderServiceImplTest {
                 .session(UUID.randomUUID())
                 .orderDetailsData(orderDetailsDataList)
                 .build();
-        assertThrows(MenuItemOutOfStockException.class, () -> service.create(orderRequest));
+        assertThrows(MenuItemOutOfStockException.class, () -> service.create(orderRequest, null));
     }
 
+    @Test
+    void whenCreateOrderFromAnotherSquadTheTotalPriceShouldBeZero() {
+        MenuItem item = MenuItem.builder()
+                .id("1")
+                .price(5000)
+                .stock(10)
+                .build();
+
+        Order order1 = Order.builder()
+                .session(UUID.randomUUID())
+                .build();
+        OrderDetails orderDetails = OrderDetails.builder()
+                .order(order)
+                .menuItem(item)
+                .quantity(1)
+                .status("Menunggu konfirmasi")
+                .totalPrice(0)
+                .build();
+        order.setOrderDetailsList(Collections.singletonList(orderDetails));
+
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(item));
+        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(orderDetails);
+        when(orderRepository.save(any(Order.class))).thenReturn(order1);
+
+        Order result = service.create(orderRequest, "warnet");
+
+        verify(orderRepository, atLeastOnce()).save(any(Order.class));
+
+
+    }
     @Test
     void whenUpdateOrderAndFoundShouldReturnTheUpdatedOrder() {
         // Set up mock data

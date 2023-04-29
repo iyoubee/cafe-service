@@ -36,8 +36,8 @@ public class OrderController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
-        Order response = orderService.create(orderRequest);
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest, @RequestParam(required = false) String from) {
+        Order response = orderService.create(orderRequest, from);
         return ResponseEntity.ok(response);
     }
     @PutMapping("/update/{id}")

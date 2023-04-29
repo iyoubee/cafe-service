@@ -60,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order create(OrderRequest request) {
+    public Order create(OrderRequest request, String from) {
         var order = Order.builder().session(request.getSession()).build();
         List<OrderDetails> orderDetailsList = new ArrayList<>();
         for (OrderDetailsData orderDetailsData : request.getOrderDetailsData()) {
@@ -82,6 +82,9 @@ public class OrderServiceImpl implements OrderService {
                     .price(menuItem.get().getPrice())
                     .stock(menuItem.get().getStock() - orderDetailsData.getQuantity())
                     .build();
+            if (from != null && from.equalsIgnoreCase("warnet")) {
+                orderDetails.setTotalPrice(0);
+            }
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
             orderDetails.setOrder(order);
             orderDetailsRepository.save(orderDetails);

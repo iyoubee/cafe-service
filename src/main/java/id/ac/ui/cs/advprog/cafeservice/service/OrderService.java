@@ -13,7 +13,7 @@ public interface OrderService {
     List<Order> findAll();
     List<Order> findBySession(UUID session);
     Order findById(Integer id);
-    Order create(OrderRequest request);
+    Order create(OrderRequest request, String from);
     Order update(Integer id, OrderRequest request);
     void delete(Integer id);
 
