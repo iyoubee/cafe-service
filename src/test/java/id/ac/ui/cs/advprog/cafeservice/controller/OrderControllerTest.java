@@ -77,6 +77,7 @@ class OrderControllerTest {
         OrderDetailsData orderDetailsData = new OrderDetailsData();
         orderDetailsData.setQuantity(1);
         orderDetailsData.setStatus("Approved");
+        orderDetailsData.setMenuItemId(menuItem.getId());
 
         bodyContent = new Object() {
             public final UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");

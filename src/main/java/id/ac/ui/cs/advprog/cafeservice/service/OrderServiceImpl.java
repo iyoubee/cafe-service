@@ -2,9 +2,7 @@ package id.ac.ui.cs.advprog.cafeservice.service;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.InvalidJSONException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
@@ -118,16 +116,7 @@ public class OrderServiceImpl implements OrderService {
                         .status(details.getStatus())
                         .build());
 
-        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
-            try {
-                addToBill(updated);
-                updated.setStatus("Masuk bill");
-            } catch (JSONException e) {
-                throw new InvalidJSONException();
-            }
-        }
-
-        return updated;
+        return isDone(updated);
     }
 
     private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details,
@@ -142,16 +131,20 @@ public class OrderServiceImpl implements OrderService {
                         .status(details.getStatus())
                         .build());
 
-        if (updated.getStatus().equalsIgnoreCase("Selesai")) {
+        return isDone(updated);
+    }
+
+    private OrderDetails isDone(OrderDetails detals) {
+        if (detals.getStatus().equalsIgnoreCase("Selesai")) {
             try {
-                addToBill(updated);
-                updated.setStatus("Masuk bill");
+                addToBill(detals);
+                detals.setStatus("Masuk bill");
             } catch (JSONException e) {
                 throw new InvalidJSONException();
             }
         }
 
-        return updated;
+        return detals;
     }
 
     @Override
@@ -178,8 +171,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public void addToBill(OrderDetails orderDetails) throws JSONException {
-        int id = 2;
-        String url = "http://34.142.223.187/api/v1/invoices/" + id + "/bills";
+        int id = getInvoiceId(orderDetails.getOrder().getSession());
+        String url = "http://34.142.223.187/api/v1/bills";
 
         MenuItem orderedMenu = orderDetails.getMenuItem();
         JSONObject requestBody = new JSONObject();
@@ -194,6 +187,21 @@ public class OrderServiceImpl implements OrderService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
         restTemplate.postForObject(url, entity, String.class);
+    }
+
+    public int getInvoiceId(UUID session)  {
+        String url = "http://34.142.223.187/api/v1/invoices/" + session;
+
+        String response = restTemplate.getForObject(url, String.class);
+        JSONObject obj = new JSONObject(response);
+        JSONObject content = (JSONObject) obj.get("content");
+
+        if (content == null) {
+            throw new UUIDNotFoundException();
+        } else {
+            return (Integer) content.get("id");
+        }
+
     }
 
 }
