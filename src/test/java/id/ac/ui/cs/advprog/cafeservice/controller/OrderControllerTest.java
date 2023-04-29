@@ -64,6 +64,7 @@ class OrderControllerTest {
                 .menuItem(menuItem)
                 .quantity(1)
                 .status("Approved")
+                .totalPrice(10000)
                 .build()
         ))
         .build();

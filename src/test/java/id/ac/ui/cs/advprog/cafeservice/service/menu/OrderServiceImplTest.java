@@ -100,6 +100,7 @@ class OrderServiceImplTest {
                                 .menuItem(menuItem)
                                 .quantity(1)
                                 .status("Approved")
+                                .totalPrice(10000)
                                 .build()))
                 .build();
 
@@ -113,6 +114,7 @@ class OrderServiceImplTest {
                                 .menuItem(menuItem)
                                 .quantity(1)
                                 .status("Cancelled")
+                                .totalPrice(10000)
                                 .build()))
                 .build();
 
@@ -125,6 +127,7 @@ class OrderServiceImplTest {
                                 .menuItem(menuItem)
                                 .quantity(20)
                                 .status("Cancelled")
+                                .totalPrice(10000)
                                 .build()))
                 .build();
 
@@ -139,6 +142,7 @@ class OrderServiceImplTest {
                 .menuItem(menuItem)
                 .quantity(1)
                 .status("Cancelled")
+                .totalPrice(10000)
                 .build();
     }
 
@@ -150,6 +154,7 @@ class OrderServiceImplTest {
                 .menuItem(new MenuItem())
                 .quantity(2)
                 .status("pending")
+                .totalPrice(10000)
                 .build();
 
         OrderDetails orderDetails2 = OrderDetails.builder()
@@ -158,6 +163,7 @@ class OrderServiceImplTest {
                 .menuItem(new MenuItem())
                 .quantity(3)
                 .status("completed")
+                .totalPrice(10000)
                 .build();
 
         assertNotEquals(orderDetails1.hashCode(), orderDetails2.hashCode());
@@ -173,6 +179,7 @@ class OrderServiceImplTest {
                 .menuItem(menuItem)
                 .quantity(2)
                 .status("pending")
+                .totalPrice(20)
                 .build();
 
         OrderDetails orderDetails2 = OrderDetails.builder()
@@ -181,6 +188,7 @@ class OrderServiceImplTest {
                 .menuItem(menuItem)
                 .quantity(2)
                 .status("pending")
+                .totalPrice(20)
                 .build();
 
         assertEquals(orderDetails1, orderDetails2);
@@ -196,10 +204,11 @@ class OrderServiceImplTest {
                 .menuItem(menuItem)
                 .quantity(2)
                 .status("pending")
+                .totalPrice(20)
                 .build();
 
         String expectedString = "OrderDetails(id=1, order=" + order.toString() + ", menuItem=" + menuItem.toString()
-                + ", quantity=2, status=pending)";
+                + ", quantity=2, status=pending, totalPrice=20)";
         assertEquals(expectedString, orderDetails.toString());
     }
 
@@ -298,6 +307,7 @@ class OrderServiceImplTest {
                 .quantity(1)
                 .menuItem(menuItem)
                 .status("Dalam pemesanan")
+                .totalPrice(10000)
                 .build();
         List<OrderDetails> orderDetailsList = List.of(orderDetails);
         Order order = Order.builder()
@@ -305,6 +315,7 @@ class OrderServiceImplTest {
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
                 .orderDetailsList(orderDetailsList)
                 .build();
+        System.out.println(orderDetailsList);
 
         // Set up request data
         OrderRequest orderRequest = OrderRequest.builder()
@@ -334,6 +345,7 @@ class OrderServiceImplTest {
                 .quantity(2)
                 .menuItem(menuItemUpdated)
                 .status("Dalam pemesanan")
+                .totalPrice(20000)
                 .build();
         List<OrderDetails> orderDetailsListUpdated = List.of(orderDetailsUpdated);
         Order orderUpdated = Order.builder()

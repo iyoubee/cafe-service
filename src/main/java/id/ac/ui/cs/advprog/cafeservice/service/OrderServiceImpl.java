@@ -75,6 +75,7 @@ public class OrderServiceImpl implements OrderService {
                     .menuItem(menuItem.get())
                     .quantity(orderDetailsData.getQuantity())
                     .status("Menunggu konfirmasi")
+                    .totalPrice(menuItem.get().getPrice() * orderDetailsData.getQuantity())
                     .build();
             MenuItemRequest menuItemRequest = MenuItemRequest.builder()
                     .name(menuItem.get().getName())
@@ -132,6 +133,7 @@ public class OrderServiceImpl implements OrderService {
                         .quantity(details.getQuantity())
                         .menuItem(menuItem)
                         .status(details.getStatus())
+                        .totalPrice(menuItem.getPrice() * details.getQuantity())
                         .build());
 
         if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
@@ -166,12 +168,13 @@ public class OrderServiceImpl implements OrderService {
                         .quantity(details.getQuantity())
                         .menuItem(menuItem)
                         .status(details.getStatus())
+                        .totalPrice(menuItem.getPrice() * details.getQuantity())
                         .build());
 
         if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
             try {
-                addToBill(existingOrderDetails);
-                existingOrderDetails.setStatus("Masuk bill");
+                addToBill(updated);
+                updated.setStatus("Masuk bill");
             } catch (JSONException e) {
                 throw new InvalidJSONException();
             }
@@ -195,26 +198,9 @@ public class OrderServiceImpl implements OrderService {
             menuItemService.update(menuItem.getId(), menuItemRequest);
         }
 
-        if (!existingOrderDetails.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
-            MenuItemRequest menuItemRequest;
-            if (details.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
-                menuItemRequest = MenuItemRequest.builder()
-                        .name(menuItem.getName())
-                        .price(menuItem.getPrice())
-                        .stock(menuItem.getStock() + existingOrderDetails.getQuantity())
-                        .build();
-            } else {
-                menuItemRequest = MenuItemRequest.builder()
-                        .name(menuItem.getName())
-                        .price(menuItem.getPrice())
-                        .stock(menuItem.getStock() + existingOrderDetails.getQuantity() - details.getQuantity())
-                        .build();
-            }
-            menuItemService.update(menuItem.getId(), menuItemRequest);
-        }
-
-        return existingOrderDetails;
+        return updated;
     }
+
 
     @Override
     public void delete(Integer id) {
