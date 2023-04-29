@@ -20,8 +20,8 @@ public class MenuItemController {
     private final MenuItemService menuItemService;
 
     @GetMapping("/all")
-    public ResponseEntity<List<MenuItem>> getAllMenuItem() {
-        List<MenuItem> response = menuItemService.findAll();
+    public ResponseEntity<List<MenuItem>> getAllMenuItem(@RequestParam(required = false) String query) {
+        List<MenuItem> response = menuItemService.findAll(query);
         return ResponseEntity.ok(response);
     }
 

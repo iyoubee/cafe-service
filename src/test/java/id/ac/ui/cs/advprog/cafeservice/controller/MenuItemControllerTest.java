@@ -50,6 +50,7 @@ class MenuItemControllerTest {
     @BeforeEach
     void setUp() {
         menuItem = MenuItem.builder()
+                .id("1")
                 .name("Indomie")
                 .price(5000)
                 .stock(100)
@@ -86,7 +87,7 @@ class MenuItemControllerTest {
     void testGetAllMenuItem() throws Exception {
         List<MenuItem> allMenuItem = List.of(menuItem);
 
-        when(service.findAll()).thenReturn(allMenuItem);
+        when(service.findAll(null)).thenReturn(allMenuItem);
 
         mvc.perform(get("/cafe/menu/all")
                         .contentType(MediaType.APPLICATION_JSON))
@@ -94,8 +95,24 @@ class MenuItemControllerTest {
                 .andExpect(handler().methodName("getAllMenuItem"))
                 .andExpect(jsonPath("$[0].name").value(menuItem.getName()));
 
-        verify(service, atLeastOnce()).findAll();
+        verify(service, atLeastOnce()).findAll(null);
     }
+
+    @Test
+    void testGetAvailableMenuItem() throws Exception {
+        List<MenuItem> availableMenuItem = List.of(menuItem);
+
+        when(service.findAll("available")).thenReturn(availableMenuItem);
+
+        mvc.perform(get("/cafe/menu/all?query=available")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("getAllMenuItem"))
+                .andExpect(jsonPath("$[0].name").value(menuItem.getName()));
+
+        verify(service, atLeastOnce()).findAll("available");
+    }
+
 
     @Test
     void testGetMenuItemById() throws Exception {
@@ -123,8 +140,16 @@ class MenuItemControllerTest {
     }
 
     @Test
-    void testInvalidValueAddMenuItem() throws Exception {
+    void testInvalidPriceAddMenuItem() throws Exception {
         when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
+
+        bodyContent = new Object() {
+            public final String name = "Indomie";
+
+            public final int price = -1;
+
+            public final int stock = 100;
+        };
 
         try {
             mvc.perform(post("/cafe/menu/create")
@@ -142,12 +167,44 @@ class MenuItemControllerTest {
     void testNameEmptyAddMenuItem() throws Exception {
         when(service.create(any(MenuItemRequest.class))).thenReturn(emptyName);
 
+        bodyContent = new Object() {
+            public final String name = "";
+
+            public final int price = 1;
+
+            public final int stock = 100;
+        };
+
         try {
             mvc.perform(post("/cafe/menu/create")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(Util.mapToJson(bodyContent)));
         } catch (Exception e) {
             String expectedMessage = "The menu item Name request can't be empty";
+            String actualMessage = e.getMessage();
+
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
+    }
+
+    @Test
+    void testInvalidStockAddMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(emptyName);
+
+        bodyContent = new Object() {
+            public final String name = "Indomie";
+
+            public final int price = 5;
+
+            public final int stock = -10;
+        };
+
+        try {
+            mvc.perform(post("/cafe/menu/create")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(Util.mapToJson(bodyContent)));
+        } catch (Exception e) {
+            String expectedMessage = "The value of Stock is invalid";
             String actualMessage = e.getMessage();
 
             assertTrue(actualMessage.contains(expectedMessage));
@@ -169,41 +226,74 @@ class MenuItemControllerTest {
     }
 
     @Test
-    void testPutMenuItemWhenMenuItemValueIsNull() throws Exception {
-        when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(badRequest);
+    void testInvalidPricePutMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
+
+        bodyContent = new Object() {
+            public final String name = "Indomie";
+
+            public final int price = -1;
+
+            public final int stock = 100;
+        };
 
         try {
-            mvc.perform(put("/cafe/menu/update/1")
+            mvc.perform(post("/cafe/menu/update/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(Util.mapToJson(bodyContent)));
-        }catch (BadRequest e) {
-            Assertions.assertEquals(BadRequest.class, e.getClass());
+        } catch (Exception e) {
+            String expectedMessage = "The value of Price is invalid";
+            String actualMessage = e.getMessage();
+
+            assertTrue(actualMessage.contains(expectedMessage));
         }
     }
 
     @Test
-    void testPutMenuItemWhenMenuItemValueIsEmpty() throws Exception {
-        when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(emptyName);
+    void testNameEmptyPutMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(emptyName);
+
+        bodyContent = new Object() {
+            public final String name = "";
+
+            public final int price = 1;
+
+            public final int stock = 100;
+        };
 
         try {
-            mvc.perform(put("/cafe/menu/update/1")
+            mvc.perform(post("/cafe/menu/update/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(Util.mapToJson(bodyContent)));
-        }catch (MenuItemValueEmpty e) {
-            Assertions.assertEquals(MenuItemValueEmpty.class, e.getClass());
+        } catch (Exception e) {
+            String expectedMessage = "The menu item Name request can't be empty";
+            String actualMessage = e.getMessage();
+
+            assertTrue(actualMessage.contains(expectedMessage));
         }
     }
 
     @Test
-    void testPutMenuItemWhenMenuItemValueIsInvalid() throws Exception {
-        when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(invalidValue);
+    void testInvalidStockPutMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(emptyName);
+
+        bodyContent = new Object() {
+            public final String name = "Indomie";
+
+            public final int price = 5;
+
+            public final int stock = -10;
+        };
 
         try {
-            mvc.perform(put("/cafe/menu/update/1")
+            mvc.perform(post("/cafe/menu/update/1")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(Util.mapToJson(bodyContent)));
-        }catch (MenuItemValueInvalid e) {
-            Assertions.assertEquals(MenuItemValueInvalid.class, e.getClass());
+        } catch (Exception e) {
+            String expectedMessage = "The value of Stock is invalid";
+            String actualMessage = e.getMessage();
+
+            assertTrue(actualMessage.contains(expectedMessage));
         }
     }
 

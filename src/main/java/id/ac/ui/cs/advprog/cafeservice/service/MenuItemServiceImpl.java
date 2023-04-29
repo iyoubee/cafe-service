@@ -15,7 +15,10 @@ public class MenuItemServiceImpl implements MenuItemService {
     private final MenuItemRepository menuItemRepository;
 
     @Override
-    public List<MenuItem> findAll() {
+    public List<MenuItem> findAll(String query) {
+        if (query != null && query.equals("available")) {
+            return menuItemRepository.findByStockGreaterThan(0);
+        }
         return menuItemRepository.findAll();
     }
 
