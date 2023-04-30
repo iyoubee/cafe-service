@@ -1,5 +1,6 @@
 package id.ac.ui.cs.advprog.cafeservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import id.ac.ui.cs.advprog.cafeservice.Util;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
@@ -9,6 +10,7 @@ import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 
+import org.aspectj.weaver.ast.Or;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +20,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,6 +63,7 @@ class OrderControllerTest {
                 .menuItem(menuItem)
                 .quantity(1)
                 .status("Approved")
+                .totalPrice(10000)
                 .build()
         ))
         .build();
@@ -76,6 +76,7 @@ class OrderControllerTest {
         OrderDetailsData orderDetailsData = new OrderDetailsData();
         orderDetailsData.setQuantity(1);
         orderDetailsData.setStatus("Approved");
+        orderDetailsData.setMenuItemId(menuItem.getId());
 
         bodyContent = new Object() {
             public final UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
@@ -121,7 +122,7 @@ class OrderControllerTest {
 
     @Test
     void testCreateOrder() throws Exception {
-        when(service.create(any(OrderRequest.class))).thenReturn(newOrder);
+        when(service.create(any(OrderRequest.class), eq(null))).thenReturn(newOrder);
 
         mvc.perform(post("/cafe/order/create")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -129,7 +130,7 @@ class OrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("createOrder"));
 
-        verify(service, atLeastOnce()).create(any(OrderRequest.class));
+        verify(service, atLeastOnce()).create(any(OrderRequest.class), eq(null));
     }
 
     @Test

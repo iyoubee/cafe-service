@@ -26,4 +26,5 @@ public class OrderDetails {
     private MenuItem menuItem;
     private Integer quantity;
     private String status;
+    private Integer totalPrice;
 }

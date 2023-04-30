@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.cafeservice.exceptions.InvalidJSONException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemOutOfStockException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.UUIDNotFoundException;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
@@ -59,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order create(OrderRequest request) {
+    public Order create(OrderRequest request, String from) {
         var order = Order.builder().session(request.getSession()).build();
         List<OrderDetails> orderDetailsList = new ArrayList<>();
         for (OrderDetailsData orderDetailsData : request.getOrderDetailsData()) {
@@ -74,12 +75,16 @@ public class OrderServiceImpl implements OrderService {
                     .menuItem(menuItem.get())
                     .quantity(orderDetailsData.getQuantity())
                     .status("Menunggu konfirmasi")
+                    .totalPrice(menuItem.get().getPrice() * orderDetailsData.getQuantity())
                     .build();
             MenuItemRequest menuItemRequest = MenuItemRequest.builder()
                     .name(menuItem.get().getName())
                     .price(menuItem.get().getPrice())
                     .stock(menuItem.get().getStock() - orderDetailsData.getQuantity())
                     .build();
+            if (from != null && from.equalsIgnoreCase("warnet")) {
+                orderDetails.setTotalPrice(0);
+            }
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
             orderDetails.setOrder(order);
             orderDetailsRepository.save(orderDetails);
@@ -131,6 +136,7 @@ public class OrderServiceImpl implements OrderService {
                         .quantity(details.getQuantity())
                         .menuItem(menuItem)
                         .status(details.getStatus())
+                        .totalPrice(menuItem.getPrice() * details.getQuantity())
                         .build());
 
         if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
@@ -165,6 +171,7 @@ public class OrderServiceImpl implements OrderService {
                         .quantity(details.getQuantity())
                         .menuItem(menuItem)
                         .status(details.getStatus())
+                        .totalPrice(menuItem.getPrice() * details.getQuantity())
                         .build());
 
         if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
@@ -197,6 +204,7 @@ public class OrderServiceImpl implements OrderService {
         return updated;
     }
 
+
     @Override
     public void delete(Integer id) {
         if (isOrderDoesNotExist(id)) {
@@ -217,8 +225,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public void addToBill(OrderDetails orderDetails) throws JSONException {
-        int id = 2;
-        String url = "http://34.142.223.187/api/v1/invoices/" + id + "/bills";
+        int id = getInvoiceId(orderDetails.getOrder().getSession());
+        String url = "http://34.142.223.187/api/v1/bills";
 
         MenuItem orderedMenu = orderDetails.getMenuItem();
         JSONObject requestBody = new JSONObject();
@@ -233,6 +241,21 @@ public class OrderServiceImpl implements OrderService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
         restTemplate.postForObject(url, entity, String.class);
+    }
+
+    public int getInvoiceId(UUID session)  {
+        String url = "http://34.142.223.187/api/v1/invoices/" + session;
+
+        String response = restTemplate.getForObject(url, String.class);
+        JSONObject obj = new JSONObject(response);
+        JSONObject content = (JSONObject) obj.get("content");
+
+        if (content == null) {
+            throw new UUIDNotFoundException();
+        } else {
+            return (Integer) content.get("id");
+        }
+
     }
 
 }
