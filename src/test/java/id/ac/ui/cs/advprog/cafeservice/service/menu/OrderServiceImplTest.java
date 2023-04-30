@@ -342,7 +342,6 @@ class OrderServiceImplTest {
                 .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
                 .orderDetailsList(orderDetailsList)
                 .build();
-        System.out.println(orderDetailsList);
 
         // Set up request data
         OrderRequest orderRequest = OrderRequest.builder()
