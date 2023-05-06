@@ -40,6 +40,8 @@ class OrderControllerTest {
 
     Order newOrder;
 
+    OrderDetails orderDetails;
+
     Order badRequest;
 
     MenuItem menuItem;
@@ -67,6 +69,15 @@ class OrderControllerTest {
                 .build()
         ))
         .build();
+
+        orderDetails = OrderDetails.builder()
+                .id(100)
+                .order(newOrder)
+                .status("Menunggu Konfirmasi")
+                .menuItem(menuItem)
+                .quantity(1)
+                .totalPrice(10000)
+                .build();
 
         badRequest = Order.builder()
         .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
@@ -135,24 +146,24 @@ class OrderControllerTest {
 
     @Test
     void testChangeStatus() throws Exception {
-        when(service.update(any(Integer.class), any(OrderRequest.class))).thenReturn(newOrder);
+        when(service.updateOrderDetailStatus(any(Integer.class), any(String.class))).thenReturn(orderDetails);
 
-        mvc.perform(put("/cafe/order/update/1")
+        mvc.perform(put("/cafe/order/update/1?status=prepare")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("changeStatus"))
-                .andExpect(jsonPath("$.session").value("123e4567-e89b-12d3-a456-426614174000"));
+                .andExpect(jsonPath("$.status").value("Menunggu Konfirmasi"));
 
-        verify(service, atLeastOnce()).update(any(Integer.class), any(OrderRequest.class));
+        verify(service, atLeastOnce()).updateOrderDetailStatus(any(Integer.class), any(String.class));
     }
 
     @Test
     void testChangeStatusWhenOrderRequestValueIsNull() throws Exception {
-        when(service.update(any(Integer.class), any(OrderRequest.class))).thenReturn(badRequest);
+        when(service.updateOrderDetailStatus(any(Integer.class), any(String.class))).thenReturn(orderDetails);
 
         try {
-            mvc.perform(put("/cafe/order/update/1")
+            mvc.perform(put("/cafe/order/update/1?status=asd")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(Util.mapToJson(bodyContent)));
         }catch (BadRequest e) {
