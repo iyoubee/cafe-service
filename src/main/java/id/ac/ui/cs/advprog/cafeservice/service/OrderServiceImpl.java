@@ -3,11 +3,7 @@ package id.ac.ui.cs.advprog.cafeservice.service;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.InvalidJSONException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemOutOfStockException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.UUIDNotFoundException;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
@@ -74,7 +70,7 @@ public class OrderServiceImpl implements OrderService {
             OrderDetails orderDetails = OrderDetails.builder()
                     .menuItem(menuItem.get())
                     .quantity(orderDetailsData.getQuantity())
-                    .status("Menunggu konfirmasi")
+                    .status("Menunggu Konfirmasi")
                     .totalPrice(menuItem.get().getPrice() * orderDetailsData.getQuantity())
                     .build();
             MenuItemRequest menuItemRequest = MenuItemRequest.builder()
@@ -96,114 +92,29 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Order update(Integer orderId, OrderRequest request) {
-        if (isOrderDoesNotExist(orderId)) {
-            throw new OrderDoesNotExistException(orderId);
+    public OrderDetails updateOrderDetailStatus(Integer orderDetailId, String status) {
+        if (isOrderDetailDoesNotExist(orderDetailId)) {
+            throw new OrderDetailDoesNotExistException(orderDetailId);
         }
 
-        var order = Order.builder().id(orderId).session(request.getSession()).build();
-        var listOfOrderDetails = orderDetailsRepository.findAllByOrderId(orderId);
-        var orderDetailsList = new ArrayList<OrderDetails>();
+        OrderDetails orderDetails = orderDetailsRepository.findById(orderDetailId).get();
 
-        for (OrderDetailsData details : request.getOrderDetailsData()) {
-            var menu = menuItemRepository.findById(details.getMenuItemId());
-            if (menu.isEmpty()) {
-                throw new MenuItemDoesNotExistException(details.getMenuItemId());
-            }
-
-            var orderDetails = orderDetailsRepository.findByOrderIdAndMenuItemId(orderId, menu.get().getId());
-            if (details.getQuantity() > menu.get().getStock() + (orderDetails.isPresent() ? orderDetails.get().getQuantity() : 0)) {
-                throw new MenuItemOutOfStockException(menu.get().getName());
-            }
-
-            if (orderDetails.isEmpty()) {
-                orderDetailsList.add(createAndUpdateOrderDetails(order, details, menu.get()));
-
-            } else {
-                listOfOrderDetails.remove(orderDetails.get());
-                orderDetailsList.add(updateOrderDetails(order, orderDetails.get(), details, menu.get()));
-            }
+        if (orderDetails.getStatus().equals("Selesai") || orderDetails.getStatus().equals("Dibatalkan") ) {
+            throw new OrderDetailStatusInvalid(orderDetailId);
         }
-        orderDetailsRepository.deleteAll(listOfOrderDetails);
-        order.setOrderDetailsList(orderDetailsList);
-        return order;
+
+        switch (status) {
+            case "prepare" -> orderDetails.setStatus("Sedang Disiapkan");
+            case "deliver" -> orderDetails.setStatus("Sedang Diantar");
+            case "done" -> {
+                orderDetails.setStatus("Selesai");
+                addToBill(orderDetails);
+            }
+            case "cancel" -> orderDetails.setStatus("Dibatalkan");
+        }
+
+        return orderDetails;
     }
-
-    private OrderDetails createAndUpdateOrderDetails(Order order, OrderDetailsData details, MenuItem menuItem) {
-        OrderDetails updated = orderDetailsRepository.save(
-                OrderDetails.builder()
-                        .order(order)
-                        .quantity(details.getQuantity())
-                        .menuItem(menuItem)
-                        .status(details.getStatus())
-                        .totalPrice(menuItem.getPrice() * details.getQuantity())
-                        .build());
-
-        if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
-            try {
-                addToBill(updated);
-                updated.setStatus("Masuk bill");
-            } catch (JSONException e) {
-                throw new InvalidJSONException();
-            }
-        }
-
-        MenuItemRequest menuItemRequest = MenuItemRequest.builder()
-                .name(menuItem.getName())
-                .price(menuItem.getPrice())
-                .stock(menuItem.getStock() - details.getQuantity())
-                .build();
-        menuItemService.update(menuItem.getId(), menuItemRequest);
-
-        return updated;
-    }
-
-    private OrderDetails updateOrderDetails(Order order, OrderDetails existingOrderDetails, OrderDetailsData details, MenuItem menuItem) {
-
-        if (existingOrderDetails.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
-            return existingOrderDetails;
-        }
-
-        OrderDetails updated = orderDetailsRepository.save(
-                OrderDetails.builder()
-                        .id(existingOrderDetails.getId())
-                        .order(order)
-                        .quantity(details.getQuantity())
-                        .menuItem(menuItem)
-                        .status(details.getStatus())
-                        .totalPrice(menuItem.getPrice() * details.getQuantity())
-                        .build());
-
-        if (updated != null && updated.getStatus().equalsIgnoreCase("Selesai")) {
-            try {
-                addToBill(updated);
-                updated.setStatus("Masuk bill");
-            } catch (JSONException e) {
-                throw new InvalidJSONException();
-            }
-        }
-
-        if (!existingOrderDetails.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
-            MenuItemRequest menuItemRequest;
-            if (details.getStatus().equalsIgnoreCase(CANCELLED_STATUS)){
-                menuItemRequest = MenuItemRequest.builder()
-                        .name(menuItem.getName())
-                        .price(menuItem.getPrice())
-                        .stock(menuItem.getStock() + existingOrderDetails.getQuantity())
-                        .build();
-            } else {
-                menuItemRequest = MenuItemRequest.builder()
-                        .name(menuItem.getName())
-                        .price(menuItem.getPrice())
-                        .stock(menuItem.getStock() + existingOrderDetails.getQuantity() - details.getQuantity())
-                        .build();
-            }
-            menuItemService.update(menuItem.getId(), menuItemRequest);
-        }
-
-        return updated;
-    }
-
 
     @Override
     public void delete(Integer id) {
@@ -220,8 +131,12 @@ public class OrderServiceImpl implements OrderService {
         return orderBySession.orElseGet(ArrayList::new);
     }
 
-    public boolean isOrderDoesNotExist(Integer id) {
-        return orderRepository.findById(id).isEmpty();
+    public boolean isOrderDoesNotExist(Integer orderId) {
+        return orderRepository.findById(orderId).isEmpty();
+    }
+
+    public boolean isOrderDetailDoesNotExist(Integer orderDetailId) {
+        return orderDetailsRepository.findById(orderDetailId).isEmpty();
     }
 
     public void addToBill(OrderDetails orderDetails) throws JSONException {

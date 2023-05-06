@@ -333,7 +333,7 @@ class OrderServiceImplTest {
                 .id(1)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Dalam pemesanan")
+                .status("Menunggu Konfirmasi")
                 .totalPrice(10000)
                 .build();
         List<OrderDetails> orderDetailsList = List.of(orderDetails);
@@ -343,135 +343,94 @@ class OrderServiceImplTest {
                 .orderDetailsList(orderDetailsList)
                 .build();
 
-        // Set up request data
-        OrderRequest orderRequest = OrderRequest.builder()
-                .session(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"))
-                .orderDetailsData(List.of(OrderDetailsData.builder()
-                        .menuItemId("1")
-                        .quantity(2)
-                        .status("Dalam pemesanan")
-                        .build()))
-                .build();
-
-        // Set up expected data
-        MenuItemRequest menuItemRequest = MenuItemRequest.builder()
-                .name("Nasi Goreng")
-                .price(10000)
-                .stock(8)
-                .build();
-        MenuItem menuItemUpdated = MenuItem.builder()
-                .id("1")
-                .name("Nasi Goreng")
-                .price(10000)
-                .stock(8)
-                .build();
-        OrderDetails orderDetailsUpdated = OrderDetails.builder()
-                .id(1)
-                .order(order)
-                .quantity(2)
-                .menuItem(menuItemUpdated)
-                .status("Dalam pemesanan")
-                .totalPrice(20000)
-                .build();
-        List<OrderDetails> orderDetailsListUpdated = List.of(orderDetailsUpdated);
-        Order orderUpdated = Order.builder()
-                .id(1)
-                .session(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"))
-                .orderDetailsList(orderDetailsListUpdated)
-                .build();
-
         // Set up mock repository
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class))).thenReturn(Optional.of(orderDetails));
-        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(orderDetailsUpdated);
-        when(menuItemService.update(any(String.class), any(MenuItemRequest.class))).thenReturn(menuItemUpdated);
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
 
         // Call the service method
-        Order result = service.update(1, orderRequest);
+        OrderDetails result = service.updateOrderDetailStatus(1, "prepare");
 
         // Verify the result
-        assertEquals(orderUpdated, result);
+        assertEquals(orderDetails, result);
     }
 
-    @Test
-    void whenUpdateNonexistentOrderShouldThrowException() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
+//    @Test
+//    void whenUpdateNonexistentOrderShouldThrowException() {
+//        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
+//
+//        OrderRequest request = new OrderRequest();
+//        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
+//        request.setOrderDetailsData(List.of(new OrderDetailsData("test-menu-item-id", 2, "test-status")));
+//
+//        assertThrows(OrderDoesNotExistException.class, () -> service.update(1, request));
+//    }
+//
+//    @Test
+//    void whenUpdateOrderWithNonexistentMenuItemShouldThrowException() {
+//        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+//        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
+//
+//        OrderRequest request = new OrderRequest();
+//        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
+//        request.setOrderDetailsData(List.of(new OrderDetailsData("nonexistent-menu-item-id", 2, "test-status")));
+//
+//        assertThrows(MenuItemDoesNotExistException.class, () -> service.update(1, request));
+//    }
+//
+//    @Test
+//    void whenUpdateOrderWithMenuItemOutOfStockShouldThrowException() {
+//        OrderDetails orderDetails = mock(OrderDetails.class);
+//        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+//        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+//        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class))).thenReturn(Optional.of(orderDetails));
+//        when(orderDetailsRepository.findAllByOrderId(any(Integer.class))).thenReturn(List.of(orderDetails));
+//
+//        OrderRequest request = new OrderRequest();
+//        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
+//        request.setOrderDetailsData(List.of(new OrderDetailsData(menuItem.getId(), menuItem.getStock() + 1, "test-status")));
+//
+//        assertThrows(MenuItemOutOfStockException.class, () -> service.update(1, request));
+//    }
+//
+//    @Test
+//    void whenUpdateOrderWithNewMenuItemShouldAddOrderDetails() {
+//        OrderDetails orderDetails = mock(OrderDetails.class);
+//        // Setup mock dependencies
+//        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+//        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+//        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class))).thenReturn(Optional.empty());
+//        when(orderDetailsRepository.findAllByOrderId(any(Integer.class))).thenReturn(List.of(orderDetails));
+//
+//        // Setup input request
+//        OrderRequest request = new OrderRequest();
+//        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
+//        request.setOrderDetailsData(List.of(new OrderDetailsData(menuItem.getId(), 2, "test-status")));
+//
+//        // Call the method
+//        Order updatedOrder = service.update(1, request);
+//
+//        // Verify that the expected order details and menu item requests were made
+//        verify(orderDetailsRepository).save(any(OrderDetails.class));
+//        verify(menuItemService).update(any(String.class), any(MenuItemRequest.class));
+//
+//        // Verify the result
+//        assertEquals(1, updatedOrder.getOrderDetailsList().size());
+//    }
+//
+//
+//    @Test
+//    void whenUpdateOrderButMenuItemNotFoundShouldThrowException() {
+//        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
+//        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
+//        assertThrows(MenuItemDoesNotExistException.class, () -> {
+//            service.update(287952,orderRequest);
+//        });
+//    }
 
-        OrderRequest request = new OrderRequest();
-        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
-        request.setOrderDetailsData(List.of(new OrderDetailsData("test-menu-item-id", 2, "test-status")));
-
-        assertThrows(OrderDoesNotExistException.class, () -> service.update(1, request));
-    }
-
-    @Test
-    void whenUpdateOrderWithNonexistentMenuItemShouldThrowException() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
-
-        OrderRequest request = new OrderRequest();
-        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
-        request.setOrderDetailsData(List.of(new OrderDetailsData("nonexistent-menu-item-id", 2, "test-status")));
-
-        assertThrows(MenuItemDoesNotExistException.class, () -> service.update(1, request));
-    }
-
-    @Test
-    void whenUpdateOrderWithMenuItemOutOfStockShouldThrowException() {
-        OrderDetails orderDetails = mock(OrderDetails.class);
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class))).thenReturn(Optional.of(orderDetails));
-        when(orderDetailsRepository.findAllByOrderId(any(Integer.class))).thenReturn(List.of(orderDetails));
-
-        OrderRequest request = new OrderRequest();
-        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
-        request.setOrderDetailsData(List.of(new OrderDetailsData(menuItem.getId(), menuItem.getStock() + 1, "test-status")));
-
-        assertThrows(MenuItemOutOfStockException.class, () -> service.update(1, request));
-    }
-
-    @Test
-    void whenUpdateOrderWithNewMenuItemShouldAddOrderDetails() {
-        OrderDetails orderDetails = mock(OrderDetails.class);
-        // Setup mock dependencies
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class))).thenReturn(Optional.empty());
-        when(orderDetailsRepository.findAllByOrderId(any(Integer.class))).thenReturn(List.of(orderDetails));
-
-        // Setup input request
-        OrderRequest request = new OrderRequest();
-        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
-        request.setOrderDetailsData(List.of(new OrderDetailsData(menuItem.getId(), 2, "test-status")));
-
-        // Call the method
-        Order updatedOrder = service.update(1, request);
-
-        // Verify that the expected order details and menu item requests were made
-        verify(orderDetailsRepository).save(any(OrderDetails.class));
-        verify(menuItemService).update(any(String.class), any(MenuItemRequest.class));
-
-        // Verify the result
-        assertEquals(1, updatedOrder.getOrderDetailsList().size());
-    }
-
-
-    @Test
-    void whenUpdateOrderButMenuItemNotFoundShouldThrowException() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
-        assertThrows(MenuItemDoesNotExistException.class, () -> {
-            service.update(287952,orderRequest);
-        });
-    }
-
-    @Test
-    void whenUpdateOrderAndNotFoundShouldThrowException() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
-        Assertions.assertThrows(OrderDoesNotExistException.class, () -> service.update(287952, orderRequest));
-    }
+//    @Test
+//    void whenUpdateOrderAndNotFoundShouldThrowException() {
+//        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
+//        Assertions.assertThrows(OrderDoesNotExistException.class, () -> service.update(287952, orderRequest));
+//    }
 
     @Test
     void whenDeleteOrderAndFoundShouldDeleteOrder() {
