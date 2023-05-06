@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.cafeservice.controller;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
+import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -36,13 +37,13 @@ public class OrderController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest) {
-        Order response = orderService.create(orderRequest);
+    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest, @RequestParam(required = false) String from) {
+        Order response = orderService.create(orderRequest, from);
         return ResponseEntity.ok(response);
     }
     @PutMapping("/update/{id}")
-    public ResponseEntity<Order> changeStatus(@PathVariable Integer id, @RequestBody OrderRequest request) {
-        Order response = orderService.update(id, request);
+    public ResponseEntity<OrderDetails> changeStatus(@PathVariable Integer id, @RequestParam String status) {
+        OrderDetails response = orderService.updateOrderDetailStatus(id, status);
         return ResponseEntity.ok(response);
     }
     @DeleteMapping("/delete/{id}")

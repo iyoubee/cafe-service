@@ -1,12 +1,12 @@
 package id.ac.ui.cs.advprog.cafeservice.service.menu;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import id.ac.ui.cs.advprog.cafeservice.Util;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.InvalidJSONException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemOutOfStockException;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
@@ -38,6 +38,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -56,9 +57,6 @@ class OrderServiceImplTest {
 
     @Mock
     private MenuItemService menuItemService;
-
-    @Mock
-    RestTemplate restTemplate;
 
     Order order;
 
@@ -97,6 +95,7 @@ class OrderServiceImplTest {
                                 .menuItem(menuItem)
                                 .quantity(1)
                                 .status("Approved")
+                                .totalPrice(10000)
                                 .build()))
                 .build();
 
@@ -110,6 +109,7 @@ class OrderServiceImplTest {
                                 .menuItem(menuItem)
                                 .quantity(1)
                                 .status("Cancelled")
+                                .totalPrice(10000)
                                 .build()))
                 .build();
 
@@ -122,6 +122,7 @@ class OrderServiceImplTest {
                                 .menuItem(menuItem)
                                 .quantity(20)
                                 .status("Cancelled")
+                                .totalPrice(10000)
                                 .build()))
                 .build();
 
@@ -136,6 +137,7 @@ class OrderServiceImplTest {
                 .menuItem(menuItem)
                 .quantity(1)
                 .status("Cancelled")
+                .totalPrice(10000)
                 .build();
     }
 
@@ -147,6 +149,7 @@ class OrderServiceImplTest {
                 .menuItem(new MenuItem())
                 .quantity(2)
                 .status("pending")
+                .totalPrice(10000)
                 .build();
 
         OrderDetails orderDetails2 = OrderDetails.builder()
@@ -155,6 +158,7 @@ class OrderServiceImplTest {
                 .menuItem(new MenuItem())
                 .quantity(3)
                 .status("completed")
+                .totalPrice(10000)
                 .build();
 
         assertNotEquals(orderDetails1.hashCode(), orderDetails2.hashCode());
@@ -170,6 +174,7 @@ class OrderServiceImplTest {
                 .menuItem(menuItem)
                 .quantity(2)
                 .status("pending")
+                .totalPrice(20)
                 .build();
 
         OrderDetails orderDetails2 = OrderDetails.builder()
@@ -178,6 +183,7 @@ class OrderServiceImplTest {
                 .menuItem(menuItem)
                 .quantity(2)
                 .status("pending")
+                .totalPrice(20)
                 .build();
 
         assertEquals(orderDetails1, orderDetails2);
@@ -193,10 +199,11 @@ class OrderServiceImplTest {
                 .menuItem(menuItem)
                 .quantity(2)
                 .status("pending")
+                .totalPrice(20)
                 .build();
 
         String expectedString = "OrderDetails(id=1, order=" + order.toString() + ", menuItem=" + menuItem.toString()
-                + ", quantity=2, status=pending)";
+                + ", quantity=2, status=pending, totalPrice=20)";
         assertEquals(expectedString, orderDetails.toString());
     }
 
@@ -258,7 +265,7 @@ class OrderServiceImplTest {
         when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
-        Order result = service.create(orderRequest);
+        Order result = service.create(orderRequest, null);
 
         verify(orderRepository, atLeastOnce()).save(any(Order.class));
     }
@@ -268,7 +275,7 @@ class OrderServiceImplTest {
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
 
         assertThrows(MenuItemDoesNotExistException.class, () -> {
-            service.create(orderRequest);
+            service.create(orderRequest, null);
         });
     }
 
@@ -284,9 +291,39 @@ class OrderServiceImplTest {
                 .session(UUID.randomUUID())
                 .orderDetailsData(orderDetailsDataList)
                 .build();
-        assertThrows(MenuItemOutOfStockException.class, () -> service.create(orderRequest));
+        assertThrows(MenuItemOutOfStockException.class, () -> service.create(orderRequest, null));
     }
 
+    @Test
+    void whenCreateOrderFromAnotherSquadTheTotalPriceShouldBeZero() {
+        MenuItem item = MenuItem.builder()
+                .id("1")
+                .price(5000)
+                .stock(10)
+                .build();
+
+        Order order1 = Order.builder()
+                .session(UUID.randomUUID())
+                .build();
+        OrderDetails orderDetails = OrderDetails.builder()
+                .order(order)
+                .menuItem(item)
+                .quantity(1)
+                .status("Menunggu konfirmasi")
+                .totalPrice(0)
+                .build();
+        order.setOrderDetailsList(Collections.singletonList(orderDetails));
+
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(item));
+        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(orderDetails);
+        when(orderRepository.save(any(Order.class))).thenReturn(order1);
+
+        Order result = service.create(orderRequest, "warnet");
+
+        verify(orderRepository, atLeastOnce()).save(any(Order.class));
+
+
+    }
     @Test
     void whenUpdateOrderAndFoundShouldReturnTheUpdatedOrder() {
         // Set up mock data
@@ -294,7 +331,8 @@ class OrderServiceImplTest {
                 .id(1)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Dalam pemesanan")
+                .status("Menunggu Konfirmasi")
+                .totalPrice(10000)
                 .build();
         List<OrderDetails> orderDetailsList = List.of(orderDetails);
         Order order = Order.builder()
@@ -303,133 +341,75 @@ class OrderServiceImplTest {
                 .orderDetailsList(orderDetailsList)
                 .build();
 
-        // Set up request data
-        OrderRequest orderRequest = OrderRequest.builder()
-                .session(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"))
-                .orderDetailsData(List.of(OrderDetailsData.builder()
-                        .menuItemId("1")
-                        .quantity(2)
-                        .status("Dalam pemesanan")
-                        .build()))
-                .build();
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
 
-        // Set up expected data
-        MenuItemRequest menuItemRequest = MenuItemRequest.builder()
-                .name("Nasi Goreng")
-                .price(10000)
-                .stock(8)
-                .build();
-        MenuItem menuItemUpdated = MenuItem.builder()
-                .id("1")
-                .name("Nasi Goreng")
-                .price(10000)
-                .stock(8)
-                .build();
-        OrderDetails orderDetailsUpdated = OrderDetails.builder()
+        OrderDetails prepare = service.updateOrderDetailStatus(1, "prepare");
+        assertEquals(orderDetails, prepare);
+        OrderDetails deliver = service.updateOrderDetailStatus(1, "deliver");
+        assertEquals(orderDetails, deliver);
+        OrderDetails cancel = service.updateOrderDetailStatus(1, "cancel");
+        assertEquals(orderDetails, deliver);
+    }
+
+    @Test
+    void whenUpdateOrderAndStatusAlreadyDoneOrCanceled() {
+        // Set up mock data
+        OrderDetails orderDetails = OrderDetails.builder()
                 .id(1)
-                .order(order)
-                .quantity(2)
-                .menuItem(menuItemUpdated)
-                .status("Dalam pemesanan")
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Selesai")
+                .totalPrice(10000)
                 .build();
-        List<OrderDetails> orderDetailsListUpdated = List.of(orderDetailsUpdated);
-        Order orderUpdated = Order.builder()
+        List<OrderDetails> orderDetailsList = List.of(orderDetails);
+        Order order = Order.builder()
                 .id(1)
-                .session(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"))
-                .orderDetailsList(orderDetailsListUpdated)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(orderDetailsList)
                 .build();
 
         // Set up mock repository
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class))).thenReturn(Optional.of(orderDetails));
-        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(orderDetailsUpdated);
-        when(menuItemService.update(any(String.class), any(MenuItemRequest.class))).thenReturn(menuItemUpdated);
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
 
-        // Call the service method
-        Order result = service.update(1, orderRequest);
+        try {
+            OrderDetails deliver = service.updateOrderDetailStatus(1, "deliver");
+        }catch (OrderDetailStatusInvalid e) {
+            String expectedMessage = "Order Detail status with id 1 invalid";
+            String actualMessage = e.getMessage();
 
-        // Verify the result
-        assertEquals(orderUpdated, result);
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
     }
 
     @Test
-    void whenUpdateNonexistentOrderShouldThrowException() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
+    void whenUpdateBadRequest() {
+        // Set up mock data
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(1)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Menunggu Konfirmasi")
+                .totalPrice(10000)
+                .build();
+        List<OrderDetails> orderDetailsList = List.of(orderDetails);
+        Order order = Order.builder()
+                .id(1)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .orderDetailsList(orderDetailsList)
+                .build();
 
-        OrderRequest request = new OrderRequest();
-        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
-        request.setOrderDetailsData(List.of(new OrderDetailsData("test-menu-item-id", 2, "test-status")));
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
 
-        assertThrows(OrderDoesNotExistException.class, () -> service.update(1, request));
-    }
+        try {
+            OrderDetails prepare = service.updateOrderDetailStatus(1, "abc");
+        }catch (BadRequest e) {
+            String expectedMessage = "400 Bad Request";
+            String actualMessage = e.getMessage();
 
-    @Test
-    void whenUpdateOrderWithNonexistentMenuItemShouldThrowException() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
-
-        OrderRequest request = new OrderRequest();
-        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
-        request.setOrderDetailsData(List.of(new OrderDetailsData("nonexistent-menu-item-id", 2, "test-status")));
-
-        assertThrows(MenuItemDoesNotExistException.class, () -> service.update(1, request));
-    }
-
-    @Test
-    void whenUpdateOrderWithMenuItemOutOfStockShouldThrowException() {
-        OrderDetails orderDetails = mock(OrderDetails.class);
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class))).thenReturn(Optional.of(orderDetails));
-        when(orderDetailsRepository.findAllByOrderId(any(Integer.class))).thenReturn(List.of(orderDetails));
-
-        OrderRequest request = new OrderRequest();
-        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
-        request.setOrderDetailsData(List.of(new OrderDetailsData(menuItem.getId(), menuItem.getStock() + 1, "test-status")));
-
-        assertThrows(MenuItemOutOfStockException.class, () -> service.update(1, request));
-    }
-
-    @Test
-    void whenUpdateOrderWithNewMenuItemShouldAddOrderDetails() {
-        OrderDetails orderDetails = mock(OrderDetails.class);
-        // Setup mock dependencies
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        when(orderDetailsRepository.findByOrderIdAndMenuItemId(any(Integer.class), any(String.class))).thenReturn(Optional.empty());
-        when(orderDetailsRepository.findAllByOrderId(any(Integer.class))).thenReturn(List.of(orderDetails));
-
-        // Setup input request
-        OrderRequest request = new OrderRequest();
-        request.setSession(UUID.fromString("654e3210-e89b-12d3-a456-426614174000"));
-        request.setOrderDetailsData(List.of(new OrderDetailsData(menuItem.getId(), 2, "test-status")));
-
-        // Call the method
-        Order updatedOrder = service.update(1, request);
-
-        // Verify that the expected order details and menu item requests were made
-        verify(orderDetailsRepository).save(any(OrderDetails.class));
-        verify(menuItemService).update(any(String.class), any(MenuItemRequest.class));
-
-        // Verify the result
-        assertEquals(1, updatedOrder.getOrderDetailsList().size());
-    }
-
-
-    @Test
-    void whenUpdateOrderButMenuItemNotFoundShouldThrowException() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.of(order));
-        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
-        assertThrows(MenuItemDoesNotExistException.class, () -> {
-            service.update(287952,orderRequest);
-        });
-    }
-
-    @Test
-    void whenUpdateOrderAndNotFoundShouldThrowException() {
-        when(orderRepository.findById(any(Integer.class))).thenReturn(Optional.empty());
-        Assertions.assertThrows(OrderDoesNotExistException.class, () -> service.update(287952, orderRequest));
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
     }
 
     @Test
@@ -479,34 +459,34 @@ class OrderServiceImplTest {
 
     @Test
     void testAddToBill() throws JSONException {
-        // Create an instance of OrderDetails with some test data
+        int invoiceId = 1;
+        String invoiceUrl = "http://34.142.223.187/api/v1/invoices/" + order.getSession();
+        String invoiceResponse = "{\"content\":{\"id\":" + invoiceId + "}}";
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // Set up a mock RestTemplate and a mock response from the server
-        RestTemplate restTemplateMock = Mockito.mock(RestTemplate.class);
-//        ResponseEntity<String> mockResponse = new ResponseEntity<>("{\"status\": \"success\"}", HttpStatus.OK);
-//        Mockito.when(restTemplateMock.postForObject(Mockito.anyString(), Mockito.any(HttpEntity.class), Mockito.any(Class.class)))
-//                .thenReturn(mockResponse);
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("name", menuItem.getName());
+        requestBody.put("price", menuItem.getPrice());
+        requestBody.put("quantity", newOrderDetails.getQuantity());
+        requestBody.put("subTotal", (long) menuItem.getPrice() * newOrderDetails.getQuantity());
+        requestBody.put("invoiceId", invoiceId);
 
-        // Call the addToBill method with the mock RestTemplate and verify that it sends the expected request
-        int id = 2;
-        String expectedUrl = "http://34.142.223.187/api/v1/invoices/" + id + "/bills";
-        JSONObject expectedRequestBody = new JSONObject();
-        expectedRequestBody.put("name", menuItem.getName());
-        expectedRequestBody.put("price", menuItem.getPrice());
-        expectedRequestBody.put("quantity", newOrderDetails.getQuantity());
-        expectedRequestBody.put("subTotal", (long) menuItem.getPrice() * newOrderDetails.getQuantity());
-        expectedRequestBody.put("invoiceId", id);
+        HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
+        String billUrl = "http://34.142.223.187/api/v1/bills";
 
-        HttpHeaders expectedHeaders = new HttpHeaders();
-        expectedHeaders.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> expectedEntity = new HttpEntity<>(expectedRequestBody.toString(), expectedHeaders);
+        RestTemplate restTemplate = mock(RestTemplate.class);
         OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
-        orderService.setRestTemplate(restTemplateMock);
+        orderService.setRestTemplate(restTemplate);
+
+        when(restTemplate.getForObject((invoiceUrl), (String.class))).thenReturn(invoiceResponse);
+        when(restTemplate.postForObject((billUrl), (entity), (String.class))).thenReturn(requestBody.toString());
 
         orderService.addToBill(newOrderDetails);
 
-        Mockito.verify(restTemplateMock).postForObject(expectedUrl, expectedEntity, String.class);
+        Mockito.verify(restTemplate).getForObject(invoiceUrl, String.class);
+        Mockito.verify(restTemplate).postForObject(billUrl, entity, String.class);
     }
 
     @Test
@@ -516,5 +496,31 @@ class OrderServiceImplTest {
         assertEquals(expectedMessage, exception.getMessage());
     }
 
+    @Test
+    void testGetInvoiceId() throws JsonProcessingException {
+        UUID session = UUID.randomUUID();
+        String url = "http://34.142.223.187/api/v1/invoices/" + session;
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,menuItemRepository);
+        RestTemplate restTemplateMock = Mockito.mock(RestTemplate.class);
+        orderService.setRestTemplate(restTemplateMock);
+
+        // Construct the mock response
+        JSONObject content = new JSONObject();
+        content.put("id", 1);
+
+        JSONObject responseJson = new JSONObject();
+        responseJson.put("code", 200);
+        responseJson.put("message", "Success retrieved data");
+        responseJson.put("content", content);
+        responseJson.put("status", "SUCCESS");
+
+        // Mock the RestTemplate to return the response
+        Mockito.when(restTemplateMock.getForObject(eq(url), any())).thenReturn(responseJson.toString());
+
+        // Invoke the method and assert the result
+        int expectedInvoiceId = content.getInt("id");
+        int actualInvoiceId = orderService.getInvoiceId(session);
+        assertEquals(expectedInvoiceId, actualInvoiceId);
+    }
 
 }
