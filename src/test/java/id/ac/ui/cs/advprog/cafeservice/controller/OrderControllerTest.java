@@ -158,21 +158,21 @@ class OrderControllerTest {
         verify(service, atLeastOnce()).updateOrderDetailStatus(any(Integer.class), any(String.class));
     }
 
-//    @Test
-//    void testChangeStatusWhenOrderRequestValueIsNull() throws Exception {
-//        when(service.update(any(Integer.class), any(OrderRequest.class))).thenReturn(badRequest);
-//
-//        try {
-//            mvc.perform(put("/cafe/order/update/1")
-//                    .contentType(MediaType.APPLICATION_JSON)
-//                    .content(Util.mapToJson(bodyContent)));
-//        }catch (BadRequest e) {
-//            String expectedMessage = "400 Bad Request";
-//            String actualMessage = e.getMessage();
-//
-//            assertTrue(actualMessage.contains(expectedMessage));
-//        }
-//    }
+    @Test
+    void testChangeStatusWhenOrderRequestValueIsNull() throws Exception {
+        when(service.updateOrderDetailStatus(any(Integer.class), any(String.class))).thenReturn(orderDetails);
+
+        try {
+            mvc.perform(put("/cafe/order/update/1?status=asd")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(Util.mapToJson(bodyContent)));
+        }catch (BadRequest e) {
+            String expectedMessage = "400 Bad Request";
+            String actualMessage = e.getMessage();
+
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
+    }
 
     @Test
     void testDeleteOrder() throws Exception {

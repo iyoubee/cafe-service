@@ -111,6 +111,7 @@ public class OrderServiceImpl implements OrderService {
                 addToBill(orderDetails);
             }
             case "cancel" -> orderDetails.setStatus("Dibatalkan");
+            default -> throw new BadRequest();
         }
 
         return orderDetails;
