@@ -110,8 +110,8 @@ public class OrderServiceImpl implements OrderService {
             case "prepare" -> orderDetails.setStatus("Sedang Disiapkan");
             case "deliver" -> orderDetails.setStatus("Sedang Diantar");
             case "done" -> {
-                orderDetails.setStatus("Selesai");
                 addToBill(orderDetails);
+                orderDetails.setStatus("Selesai");
             }
             case "cancel" -> orderDetails.setStatus(CANCELLED_STATUS);
             default -> throw new BadRequest();
@@ -137,10 +137,6 @@ public class OrderServiceImpl implements OrderService {
 
     public boolean isOrderDoesNotExist(Integer orderId) {
         return orderRepository.findById(orderId).isEmpty();
-    }
-
-    public boolean isOrderDetailDoesNotExist(Integer orderDetailId) {
-        return orderDetailsRepository.findById(orderDetailId).isEmpty();
     }
 
     public void addToBill(OrderDetails orderDetails) throws JSONException {
