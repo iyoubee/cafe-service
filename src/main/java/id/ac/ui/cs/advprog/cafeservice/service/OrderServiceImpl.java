@@ -93,13 +93,16 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDetails updateOrderDetailStatus(Integer orderDetailId, String status) {
-        if (isOrderDetailDoesNotExist(orderDetailId)) {
+
+        Optional<OrderDetails> optionalOrderDetails = orderDetailsRepository.findById(orderDetailId);
+
+        if (optionalOrderDetails.isEmpty()) {
             throw new OrderDetailDoesNotExistException(orderDetailId);
         }
 
-        OrderDetails orderDetails = orderDetailsRepository.findById(orderDetailId).get();
+        OrderDetails orderDetails = optionalOrderDetails.get();
 
-        if (orderDetails.getStatus().equals("Selesai") || orderDetails.getStatus().equals("Dibatalkan") ) {
+        if (orderDetails.getStatus().equals("Selesai") || orderDetails.getStatus().equals(CANCELLED_STATUS) ) {
             throw new OrderDetailStatusInvalid(orderDetailId);
         }
 
@@ -110,7 +113,7 @@ public class OrderServiceImpl implements OrderService {
                 orderDetails.setStatus("Selesai");
                 addToBill(orderDetails);
             }
-            case "cancel" -> orderDetails.setStatus("Dibatalkan");
+            case "cancel" -> orderDetails.setStatus(CANCELLED_STATUS);
             default -> throw new BadRequest();
         }
 
