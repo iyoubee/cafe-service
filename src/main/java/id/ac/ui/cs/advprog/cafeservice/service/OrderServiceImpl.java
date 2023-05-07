@@ -125,6 +125,8 @@ public class OrderServiceImpl implements OrderService {
             default -> throw new BadRequest();
         }
 
+        orderDetailsRepository.save(orderDetails);
+
         return orderDetails;
     }
 
