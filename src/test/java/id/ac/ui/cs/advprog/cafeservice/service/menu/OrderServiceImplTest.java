@@ -198,12 +198,12 @@ class OrderServiceImplTest {
                 .order(order)
                 .menuItem(menuItem)
                 .quantity(2)
-                .status("pending")
+                .status("Menunggu Konfirmasi")
                 .totalPrice(20)
                 .build();
 
         String expectedString = "OrderDetails(id=1, order=" + order.toString() + ", menuItem=" + menuItem.toString()
-                + ", quantity=2, status=pending, totalPrice=20)";
+                + ", quantity=2, status=Menunggu Konfirmasi, totalPrice=20)";
         assertEquals(expectedString, orderDetails.toString());
     }
 
@@ -325,31 +325,81 @@ class OrderServiceImplTest {
 
     }
     @Test
-    void whenUpdateOrderAndFoundShouldReturnTheUpdatedOrder() {
+    void whenCancleOrder() {
         // Set up mock data
         OrderDetails orderDetails = OrderDetails.builder()
-                .id(1)
+                .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
                 .status("Menunggu Konfirmasi")
                 .totalPrice(10000)
                 .build();
-        List<OrderDetails> orderDetailsList = List.of(orderDetails);
-        Order order = Order.builder()
-                .id(1)
-                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-                .orderDetailsList(orderDetailsList)
+
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        OrderDetails cancel = service.updateOrderDetailStatus(2, "cancel");
+        assertEquals(orderDetails, cancel);
+    }
+
+    @Test
+    void whenPrepareOrder() {
+        // Set up mock data
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Menunggu Konfirmasi")
+                .totalPrice(10000)
                 .build();
 
         // Set up mock repository
         when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
 
-        OrderDetails prepare = service.updateOrderDetailStatus(1, "prepare");
+        OrderDetails prepare = service.updateOrderDetailStatus(2, "prepare");
         assertEquals(orderDetails, prepare);
-        OrderDetails deliver = service.updateOrderDetailStatus(1, "deliver");
+    }
+
+    @Test
+    void whenDeliverOrder() {
+        // Set up mock data
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Menunggu Konfirmasi")
+                .totalPrice(10000)
+                .build();
+
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        OrderDetails deliver = service.updateOrderDetailStatus(2, "deliver");
         assertEquals(orderDetails, deliver);
-        OrderDetails cancel = service.updateOrderDetailStatus(1, "cancel");
-        assertEquals(orderDetails, deliver);
+    }
+
+    @Test
+    void whenNegativeCancleOrder() {
+        // Set up mock data
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Sedang Disiapkan")
+                .totalPrice(10000)
+                .build();
+
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        try {
+            service.updateOrderDetailStatus(2, "cancel");
+        }catch (OrderDetailStatusInvalid e) {
+            String expectedMessage = "Order Detail status with id 2 invalid";
+            String actualMessage = e.getMessage();
+
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
     }
 
     @Test
@@ -373,7 +423,7 @@ class OrderServiceImplTest {
         when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
 
         try {
-            OrderDetails deliver = service.updateOrderDetailStatus(1, "deliver");
+            service.updateOrderDetailStatus(1, "deliver");
         }catch (OrderDetailStatusInvalid e) {
             String expectedMessage = "Order Detail status with id 1 invalid";
             String actualMessage = e.getMessage();
