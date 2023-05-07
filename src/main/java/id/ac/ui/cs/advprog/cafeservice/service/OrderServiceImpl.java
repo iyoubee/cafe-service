@@ -37,6 +37,8 @@ public class OrderServiceImpl implements OrderService {
     private RestTemplate restTemplate;
     private static final String CANCELLED_STATUS = "Dibatalkan";
 
+    private static final String DONE_STATUS = "Selesai";
+
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -102,7 +104,7 @@ public class OrderServiceImpl implements OrderService {
 
         OrderDetails orderDetails = optionalOrderDetails.get();
 
-        if (orderDetails.getStatus().equals("Selesai") || orderDetails.getStatus().equals(CANCELLED_STATUS) ) {
+        if (orderDetails.getStatus().equals(DONE_STATUS) || orderDetails.getStatus().equals(CANCELLED_STATUS)) {
             throw new OrderDetailStatusInvalid(orderDetailId);
         }
 
@@ -110,10 +112,16 @@ public class OrderServiceImpl implements OrderService {
             case "prepare" -> orderDetails.setStatus("Sedang Disiapkan");
             case "deliver" -> orderDetails.setStatus("Sedang Diantar");
             case "done" -> {
-                orderDetails.setStatus("Selesai");
                 addToBill(orderDetails);
+                orderDetails.setStatus(DONE_STATUS);
             }
-            case "cancel" -> orderDetails.setStatus(CANCELLED_STATUS);
+            case "cancel" -> {
+                if (orderDetails.getStatus().equals("Menunggu Konfirmasi")) {
+                    orderDetails.setStatus(CANCELLED_STATUS);
+                } else {
+                    throw new OrderDetailStatusInvalid(orderDetailId);
+                }
+            }
             default -> throw new BadRequest();
         }
 
@@ -137,10 +145,6 @@ public class OrderServiceImpl implements OrderService {
 
     public boolean isOrderDoesNotExist(Integer orderId) {
         return orderRepository.findById(orderId).isEmpty();
-    }
-
-    public boolean isOrderDetailDoesNotExist(Integer orderDetailId) {
-        return orderDetailsRepository.findById(orderDetailId).isEmpty();
     }
 
     public void addToBill(OrderDetails orderDetails) throws JSONException {
