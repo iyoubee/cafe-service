@@ -116,7 +116,7 @@ public class OrderServiceImpl implements OrderService {
                 orderDetails.setStatus(DONE_STATUS);
             }
             case "cancel" -> {
-                if (orderDetails.getStatus().equals("Menunggu Konfirmasi")) {
+                if (orderDetails.getStatus().equals("Menunggu Konfirmasi") && orderDetails.getTotalPrice() != 0) {
                     orderDetails.setStatus(CANCELLED_STATUS);
                 } else {
                     throw new OrderDetailStatusInvalid(orderDetailId);
