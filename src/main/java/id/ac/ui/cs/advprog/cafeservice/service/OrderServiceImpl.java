@@ -173,11 +173,10 @@ public class OrderServiceImpl implements OrderService {
 
         String response = restTemplate.getForObject(url, String.class);
         JSONObject obj = new JSONObject(response);
-        JSONObject content = (JSONObject) obj.get("content");
-
-        if (content == null) {
+        if (obj.isNull("content")) {
             throw new UUIDNotFoundException();
-        } else {
+        }else {
+            JSONObject content = (JSONObject) obj.get("content");
             return (Integer) content.get("id");
         }
 

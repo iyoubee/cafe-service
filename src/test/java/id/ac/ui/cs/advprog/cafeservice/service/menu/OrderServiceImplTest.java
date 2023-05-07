@@ -559,10 +559,7 @@ class OrderServiceImplTest {
         content.put("id", 1);
 
         JSONObject responseJson = new JSONObject();
-        responseJson.put("code", 200);
-        responseJson.put("message", "Success retrieved data");
         responseJson.put("content", content);
-        responseJson.put("status", "SUCCESS");
 
         // Mock the RestTemplate to return the response
         Mockito.when(restTemplateMock.getForObject(eq(url), any())).thenReturn(responseJson.toString());
@@ -573,4 +570,37 @@ class OrderServiceImplTest {
         assertEquals(expectedInvoiceId, actualInvoiceId);
     }
 
+    @Test
+    void testUUIDNotFoundException() {
+        String expectedMessage = "The UUID is not found";
+        UUIDNotFoundException exception = new UUIDNotFoundException();
+        assertEquals(exception.getMessage(), expectedMessage);
+    }
+
+    @Test
+    void testOrderDetailsDoesNotExistException() {
+        int orderId = 1;
+        String expectedMessage = "Order Detail with id " + orderId + " does not exist";
+        OrderDetailDoesNotExistException exception = new OrderDetailDoesNotExistException(orderId);
+        assertEquals(exception.getMessage(), expectedMessage);
+    }
+
+    @Test
+    void whenGetInvoiceIdAndNotFoundShouldThrowException() {
+
+        UUID session = UUID.randomUUID();
+        String url = "http://34.142.223.187/api/v1/invoices/" + session;
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,menuItemRepository);
+        RestTemplate restTemplateMock = Mockito.mock(RestTemplate.class);
+        orderService.setRestTemplate(restTemplateMock);
+
+        // Construct the mock response
+        String response = "{\"content\": null}";
+
+        // Mock the RestTemplate to return the response
+        Mockito.when(restTemplateMock.getForObject(eq(url), any())).thenReturn(response);
+
+        // Invoke the method and assert the result
+        assertThrows(UUIDNotFoundException.class, () -> orderService.getInvoiceId(session));
+    }
 }

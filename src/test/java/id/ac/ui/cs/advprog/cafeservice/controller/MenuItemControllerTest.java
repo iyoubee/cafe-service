@@ -1,9 +1,11 @@
 package id.ac.ui.cs.advprog.cafeservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.cafeservice.Util;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
+import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueEmpty;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueInvalid;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
@@ -151,16 +153,11 @@ class MenuItemControllerTest {
             public final int stock = 100;
         };
 
-        try {
-            mvc.perform(post("/cafe/menu/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(Util.mapToJson(bodyContent)));
-        } catch (Exception e) {
-            String expectedMessage = "The value of Price is invalid";
-            String actualMessage = e.getMessage();
+        mvc.perform(post("/cafe/menu/create")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
 
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
     }
 
     @Test
@@ -175,16 +172,10 @@ class MenuItemControllerTest {
             public final int stock = 100;
         };
 
-        try {
-            mvc.perform(post("/cafe/menu/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(Util.mapToJson(bodyContent)));
-        } catch (Exception e) {
-            String expectedMessage = "The menu item Name request can't be empty";
-            String actualMessage = e.getMessage();
-
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        mvc.perform(post("/cafe/menu/create")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -199,16 +190,10 @@ class MenuItemControllerTest {
             public final int stock = -10;
         };
 
-        try {
-            mvc.perform(post("/cafe/menu/create")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(Util.mapToJson(bodyContent)));
-        } catch (Exception e) {
-            String expectedMessage = "The value of Stock is invalid";
-            String actualMessage = e.getMessage();
-
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        mvc.perform(post("/cafe/menu/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -237,16 +222,10 @@ class MenuItemControllerTest {
             public final int stock = 100;
         };
 
-        try {
-            mvc.perform(post("/cafe/menu/update/1")
+        mvc.perform(put("/cafe/menu/update/1")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content(Util.mapToJson(bodyContent)));
-        } catch (Exception e) {
-            String expectedMessage = "The value of Price is invalid";
-            String actualMessage = e.getMessage();
-
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+                    .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -261,16 +240,10 @@ class MenuItemControllerTest {
             public final int stock = 100;
         };
 
-        try {
-            mvc.perform(post("/cafe/menu/update/1")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(Util.mapToJson(bodyContent)));
-        } catch (Exception e) {
-            String expectedMessage = "The menu item Name request can't be empty";
-            String actualMessage = e.getMessage();
-
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        mvc.perform(put("/cafe/menu/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -285,16 +258,10 @@ class MenuItemControllerTest {
             public final int stock = -10;
         };
 
-        try {
-            mvc.perform(post("/cafe/menu/update/1")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(Util.mapToJson(bodyContent)));
-        } catch (Exception e) {
-            String expectedMessage = "The value of Stock is invalid";
-            String actualMessage = e.getMessage();
-
-            assertTrue(actualMessage.contains(expectedMessage));
-        }
+        mvc.perform(put("/cafe/menu/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -332,5 +299,16 @@ class MenuItemControllerTest {
         String expectedMessage = "400 Bad Request";
         BadRequest exception = new BadRequest();
         assertEquals(expectedMessage, exception.getMessage());
+    }
+
+    @Test
+    void testPutMenuItemShouldThrowMenuItemDoesntExistException() throws Exception {
+        when(service.update(anyString(), any(MenuItemRequest.class))).thenThrow(MenuItemDoesNotExistException.class);
+
+        mvc.perform(put("/cafe/menu/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isNotFound());
+
     }
 }
