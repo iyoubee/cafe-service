@@ -112,7 +112,7 @@ public class OrderServiceImpl implements OrderService {
             case "prepare" -> orderDetails.setStatus("Sedang Disiapkan");
             case "deliver" -> orderDetails.setStatus("Sedang Diantar");
             case "done" -> {
-                addToBill(orderDetails);
+                if (orderDetails.getTotalPrice() != 0) addToBill(orderDetails);
                 orderDetails.setStatus(DONE_STATUS);
             }
             case "cancel" -> {
@@ -159,7 +159,7 @@ public class OrderServiceImpl implements OrderService {
         requestBody.put("name", orderedMenu.getName());
         requestBody.put("price", orderedMenu.getPrice());
         requestBody.put("quantity", orderDetails.getQuantity());
-        requestBody.put("subTotal", (long) orderedMenu.getPrice() * orderDetails.getQuantity());
+        requestBody.put("subTotal", (long) orderDetails.getTotalPrice());
         requestBody.put("invoiceId", id);
 
         HttpHeaders headers = new HttpHeaders();
