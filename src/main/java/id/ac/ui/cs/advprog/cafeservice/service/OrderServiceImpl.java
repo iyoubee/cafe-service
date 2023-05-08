@@ -117,6 +117,9 @@ public class OrderServiceImpl implements OrderService {
             }
             case "cancel" -> {
                 if (orderDetails.getStatus().equals("Menunggu Konfirmasi") && orderDetails.getTotalPrice() != 0) {
+                    MenuItem menuItem = orderDetails.getMenuItem();
+                    menuItem.setStock(menuItem.getStock() + orderDetails.getQuantity());
+                    menuItemRepository.save(menuItem);
                     orderDetails.setStatus(CANCELLED_STATUS);
                 } else {
                     throw new OrderDetailStatusInvalid(orderDetailId);
@@ -150,7 +153,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public void addToBill(OrderDetails orderDetails) throws JSONException {
-        int id = getInvoiceId(orderDetails.getOrder().getSession());
         String url = "http://34.142.223.187/api/v1/bills";
 
         MenuItem orderedMenu = orderDetails.getMenuItem();
@@ -160,26 +162,12 @@ public class OrderServiceImpl implements OrderService {
         requestBody.put("price", orderedMenu.getPrice());
         requestBody.put("quantity", orderDetails.getQuantity());
         requestBody.put("subTotal", (long) orderDetails.getTotalPrice());
-        requestBody.put("invoiceId", id);
+        requestBody.put("sessionId", orderDetails.getOrder().getSession());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
         restTemplate.postForObject(url, entity, String.class);
-    }
-
-    public int getInvoiceId(UUID session)  {
-        String url = "http://34.142.223.187/api/v1/invoices/" + session;
-
-        String response = restTemplate.getForObject(url, String.class);
-        JSONObject obj = new JSONObject(response);
-        if (obj.isNull("content")) {
-            throw new UUIDNotFoundException();
-        }else {
-            JSONObject content = (JSONObject) obj.get("content");
-            return (Integer) content.get("id");
-        }
-
     }
 
 }
