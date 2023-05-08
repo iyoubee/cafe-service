@@ -33,56 +33,39 @@ public class MenuItemController {
 
     @PostMapping("/create")
     public ResponseEntity<MenuItem> addMenuItem(@RequestBody MenuItemRequest request) {
-
-        if(request.getName() == null || request.getPrice() == null || request.getStock() == null){
-            throw new BadRequest();
-        }
-
-        else if(request.getName().equals("")){
-            throw new MenuItemValueEmpty("Name");
-        }
-
-        else if(request.getPrice() < 0){
-            throw new MenuItemValueInvalid("Price");
-        }
-
-        else if(request.getStock() < 0){
-            throw new MenuItemValueInvalid("Stock");
-        }
-
-        else{
-            MenuItem response = menuItemService.create(request);
-            return ResponseEntity.ok(response);
-        }
+        validateRequest(request);
+        MenuItem response = menuItemService.create(request);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<MenuItem> putMenuItem(@PathVariable String id, @RequestBody MenuItemRequest request) {
-        if(request.getName() == null || request.getPrice() == null || request.getStock() == null){
-            throw new BadRequest();
-        }
-
-        else if(request.getName().equals("")){
-            throw new MenuItemValueEmpty("Name");
-        }
-
-        else if(request.getPrice() < 0){
-            throw new MenuItemValueInvalid("Price");
-        }
-
-        else if(request.getStock() < 0){
-            throw new MenuItemValueInvalid("Stock");
-        }
-
-        else {
-            MenuItem response = menuItemService.update(id, request);
-            return ResponseEntity.ok(response);
-        }
+        validateRequest(request);
+        MenuItem response = menuItemService.update(id, request);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<String> deleteMenuItem(@PathVariable String id) {
         menuItemService.delete(id);
         return ResponseEntity.ok("Deleted Menu Item with id " + id);
+    }
+
+    private void validateRequest(MenuItemRequest request) {
+        if(request.getName() == null || request.getPrice() == null || request.getStock() == null){
+            throw new BadRequest();
+        }
+
+        else if(request.getName().equals("")){
+            throw new MenuItemValueEmpty("Name");
+        }
+
+        else if(request.getPrice() < 0){
+            throw new MenuItemValueInvalid("Price");
+        }
+
+        else if(request.getStock() < 0){
+            throw new MenuItemValueInvalid("Stock");
+        }
     }
 }
