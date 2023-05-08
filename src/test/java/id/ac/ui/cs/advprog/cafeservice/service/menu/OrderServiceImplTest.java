@@ -509,34 +509,38 @@ class OrderServiceImplTest {
 
     @Test
     void testAddToBill() throws JSONException {
-        int invoiceId = 1;
-        String invoiceUrl = "http://34.142.223.187/api/v1/invoices/" + order.getSession();
-        String invoiceResponse = "{\"content\":{\"id\":" + invoiceId + "}}";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
+        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
 
         JSONObject requestBody = new JSONObject();
         requestBody.put("name", menuItem.getName());
         requestBody.put("price", menuItem.getPrice());
         requestBody.put("quantity", newOrderDetails.getQuantity());
-        requestBody.put("subTotal", (long) menuItem.getPrice() * newOrderDetails.getQuantity());
-        requestBody.put("invoiceId", invoiceId);
+        requestBody.put("subTotal", (long) newOrderDetails.getTotalPrice());
+        requestBody.put("sessionId", session);
 
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
         String billUrl = "http://34.142.223.187/api/v1/bills";
+
+        JSONObject expectedResponse = new JSONObject();
+        expectedResponse.put("id", 1);
+        expectedResponse.put("name", menuItem.getName());
+        expectedResponse.put("price", menuItem.getPrice());
+        expectedResponse.put("quantity", newOrderDetails.getQuantity());
+        expectedResponse.put("subTotal", (long) newOrderDetails.getTotalPrice());
 
         RestTemplate restTemplate = mock(RestTemplate.class);
         OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
         orderService.setRestTemplate(restTemplate);
 
-        when(restTemplate.getForObject((invoiceUrl), (String.class))).thenReturn(invoiceResponse);
-        when(restTemplate.postForObject((billUrl), (entity), (String.class))).thenReturn(requestBody.toString());
+        when(restTemplate.postForObject((billUrl), (entity), (String.class))).thenReturn(expectedResponse.toString());
 
         orderService.addToBill(newOrderDetails);
 
-        Mockito.verify(restTemplate).getForObject(invoiceUrl, String.class);
-        Mockito.verify(restTemplate).postForObject(billUrl, entity, String.class);
+        verify(restTemplate).postForObject(billUrl, entity, String.class);
     }
 
     @Test
@@ -546,31 +550,20 @@ class OrderServiceImplTest {
         assertEquals(expectedMessage, exception.getMessage());
     }
 
+
     @Test
-    void testGetInvoiceId() throws JsonProcessingException {
-        UUID session = UUID.randomUUID();
-        String url = "http://34.142.223.187/api/v1/invoices/" + session;
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,menuItemRepository);
-        RestTemplate restTemplateMock = Mockito.mock(RestTemplate.class);
-        orderService.setRestTemplate(restTemplateMock);
+    void testUUIDNotFoundException() {
+        String expectedMessage = "The UUID is not found";
+        UUIDNotFoundException exception = new UUIDNotFoundException();
+        assertEquals(exception.getMessage(), expectedMessage);
+    }
 
-        // Construct the mock response
-        JSONObject content = new JSONObject();
-        content.put("id", 1);
-
-        JSONObject responseJson = new JSONObject();
-        responseJson.put("code", 200);
-        responseJson.put("message", "Success retrieved data");
-        responseJson.put("content", content);
-        responseJson.put("status", "SUCCESS");
-
-        // Mock the RestTemplate to return the response
-        Mockito.when(restTemplateMock.getForObject(eq(url), any())).thenReturn(responseJson.toString());
-
-        // Invoke the method and assert the result
-        int expectedInvoiceId = content.getInt("id");
-        int actualInvoiceId = orderService.getInvoiceId(session);
-        assertEquals(expectedInvoiceId, actualInvoiceId);
+    @Test
+    void testOrderDetailsDoesNotExistException() {
+        int orderId = 1;
+        String expectedMessage = "Order Detail with id " + orderId + " does not exist";
+        OrderDetailDoesNotExistException exception = new OrderDetailDoesNotExistException(orderId);
+        assertEquals(exception.getMessage(), expectedMessage);
     }
 
 }
