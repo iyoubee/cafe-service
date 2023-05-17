@@ -24,15 +24,15 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{session}")
-    public ResponseEntity<List<Order>> getOrderBySession(@PathVariable String session) {
-        List<Order> response = orderService.findBySession(UUID.fromString(session));
+    @GetMapping("/all/{page}")
+    public ResponseEntity<List<Order>> getOrderByPagination(@PathVariable int page) {
+        List<Order> response = orderService.findByPagination(page);
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{session}/{page}")
-    public ResponseEntity<List<Order>> getOrderByPagination(@PathVariable int page) {
-        List<Order> response = orderService.findByPagination(page);
+    @GetMapping("/{session}")
+    public ResponseEntity<List<Order>> getOrderBySession(@PathVariable String session) {
+        List<Order> response = orderService.findBySession(UUID.fromString(session));
         return ResponseEntity.ok(response);
     }
 
