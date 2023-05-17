@@ -20,6 +20,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
+
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
@@ -47,6 +49,23 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> findAll() {
         return orderRepository.findAll();
+    }
+
+    @Override
+    public List<Order> findByPagination(int page) {
+        int pageSize = 16;
+        List<Order> allOrders = orderRepository.findAll();
+        int totalOrders = allOrders.size();
+        int totalPages = (int) Math.ceil((double) totalOrders / pageSize);
+
+        if (page < 1 || page > totalPages) {
+            return Collections.emptyList();
+        }
+
+        int startIndex = (page - 1) * pageSize;
+        int endIndex = Math.min(startIndex + pageSize, totalOrders);
+
+        return allOrders.subList(startIndex, endIndex);
     }
 
     @Override
@@ -112,7 +131,8 @@ public class OrderServiceImpl implements OrderService {
             case "prepare" -> orderDetails.setStatus("Sedang Disiapkan");
             case "deliver" -> orderDetails.setStatus("Sedang Diantar");
             case "done" -> {
-                if (orderDetails.getTotalPrice() != 0) addToBill(orderDetails);
+                if (orderDetails.getTotalPrice() != 0)
+                    addToBill(orderDetails);
                 orderDetails.setStatus(DONE_STATUS);
             }
             case "cancel" -> {

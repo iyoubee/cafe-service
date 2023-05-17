@@ -221,6 +221,107 @@ class OrderServiceImplTest {
         assertEquals(orders, foundOrders);
         verify(orderRepository, times(1)).findAll();
     }
+
+    @Test
+    void testFindOrderByPaginationOrderLessThanSixteen() {
+        List<Order> orders = Arrays.asList(
+                Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build(),
+                Order.builder().id(3).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174002")).build(),
+                Order.builder().id(4).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174003")).build());
+
+        when(orderRepository.findAll()).thenReturn(orders);
+
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+
+        List<Order> foundOrdersPage1 = orderService.findByPagination(1);
+        int expectedPageSize = 4;
+        assertEquals(expectedPageSize, foundOrdersPage1.size());
+        assertEquals(orders.subList(0, expectedPageSize), foundOrdersPage1);
+        verify(orderRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindOrderByPaginationOrderEqualToSixteen() {
+        List<Order> orders = new ArrayList<>();
+
+        for (int i = 1; i <= 16; i++) {
+            String uuidString = "123e4567-e89b-12d3-a456-4266141740" + String.format("%02d", i);
+            System.out.println(uuidString);
+            UUID sessionUUID = UUID.fromString(uuidString);
+            Order order = Order.builder()
+                    .id(i)
+                    .session(sessionUUID)
+                    .build();
+            orders.add(order);
+        }
+
+        when(orderRepository.findAll()).thenReturn(orders);
+
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+
+        List<Order> foundOrdersPage1 = orderService.findByPagination(1);
+        int expectedPageSize = 16;
+        assertEquals(expectedPageSize, foundOrdersPage1.size());
+        assertEquals(orders.subList(0, expectedPageSize), foundOrdersPage1);
+        verify(orderRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindOrderByPaginationOrderMoreThanSixteen() {
+        List<Order> orders = new ArrayList<>();
+
+        for (int i = 1; i <= 18; i++) {
+            String uuidString = "123e4567-e89b-12d3-a456-4266141740" + String.format("%02d", i);
+            UUID sessionUUID = UUID.fromString(uuidString);
+            Order order = Order.builder()
+                    .id(i)
+                    .session(sessionUUID)
+                    .build();
+            orders.add(order);
+        }
+
+        when(orderRepository.findAll()).thenReturn(orders);
+
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+
+        List<Order> foundOrdersPage1 = orderService.findByPagination(1);
+        int expectedPageSize = 16;
+        assertEquals(expectedPageSize, foundOrdersPage1.size());
+        assertEquals(orders.subList(0, expectedPageSize), foundOrdersPage1);
+        verify(orderRepository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindOrderByPaginationOrderMoreThanSixteenPageTwo() {
+        List<Order> orders = new ArrayList<>();
+
+        for (int i = 1; i <= 18; i++) {
+            String uuidString = "123e4567-e89b-12d3-a456-4266141740" + String.format("%02d", i);
+            UUID sessionUUID = UUID.fromString(uuidString);
+            Order order = Order.builder()
+                    .id(i)
+                    .session(sessionUUID)
+                    .build();
+            orders.add(order);
+        }
+
+        when(orderRepository.findAll()).thenReturn(orders);
+
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+
+        int expectedPageSize = 2;
+        List<Order> foundOrdersPage2 = orderService.findByPagination(2);
+        assertEquals(expectedPageSize, foundOrdersPage2.size());
+        assertEquals(orders.subList(16, 18), foundOrdersPage2);
+        verify(orderRepository, times(1)).findAll();
+
+    }
+
     @Test
     void whenFindByIdWithExistingOrderShouldReturnOrder() {
         Integer id = 1;
@@ -245,7 +346,6 @@ class OrderServiceImplTest {
         assertEquals("Order with id " + id + " does not exist", exception.getMessage());
         verify(orderRepository, times(1)).findById(id);
     }
-
 
     @Test
     void testIsOrderDoesNotExist() {
@@ -322,8 +422,8 @@ class OrderServiceImplTest {
 
         verify(orderRepository, atLeastOnce()).save(any(Order.class));
 
-
     }
+
     @Test
     void whenCancleOrder() {
         // Set up mock data
@@ -394,7 +494,7 @@ class OrderServiceImplTest {
 
         try {
             service.updateOrderDetailStatus(2, "cancel");
-        }catch (OrderDetailStatusInvalid e) {
+        } catch (OrderDetailStatusInvalid e) {
             String expectedMessage = "Order Detail status with id 2 invalid";
             String actualMessage = e.getMessage();
 
@@ -424,7 +524,7 @@ class OrderServiceImplTest {
 
         try {
             service.updateOrderDetailStatus(1, "deliver");
-        }catch (OrderDetailStatusInvalid e) {
+        } catch (OrderDetailStatusInvalid e) {
             String expectedMessage = "Order Detail status with id 1 invalid";
             String actualMessage = e.getMessage();
 
@@ -454,7 +554,7 @@ class OrderServiceImplTest {
 
         try {
             OrderDetails prepare = service.updateOrderDetailStatus(1, "abc");
-        }catch (BadRequest e) {
+        } catch (BadRequest e) {
             String expectedMessage = "400 Bad Request";
             String actualMessage = e.getMessage();
 
@@ -485,7 +585,8 @@ class OrderServiceImplTest {
                 Order.builder().id(2).session(session).build());
         when(orderRepository.findBySession(session)).thenReturn(Optional.of(orders));
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
         List<Order> foundOrders = orderService.findBySession(session);
 
         assertEquals(2, foundOrders.size());
@@ -499,7 +600,8 @@ class OrderServiceImplTest {
         List<Order> emptyOrders = new ArrayList<>();
         when(orderRepository.findBySession(session)).thenReturn(Optional.of(emptyOrders));
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
         List<Order> foundOrders = orderService.findBySession(session);
 
         assertEquals(0, foundOrders.size());
@@ -533,7 +635,8 @@ class OrderServiceImplTest {
         expectedResponse.put("subTotal", (long) newOrderDetails.getTotalPrice());
 
         RestTemplate restTemplate = mock(RestTemplate.class);
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
         orderService.setRestTemplate(restTemplate);
 
         when(restTemplate.postForObject((billUrl), (entity), (String.class))).thenReturn(expectedResponse.toString());
@@ -549,7 +652,6 @@ class OrderServiceImplTest {
         InvalidJSONException exception = new InvalidJSONException();
         assertEquals(expectedMessage, exception.getMessage());
     }
-
 
     @Test
     void testUUIDNotFoundException() {
