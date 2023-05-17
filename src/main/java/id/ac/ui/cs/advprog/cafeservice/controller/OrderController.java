@@ -30,6 +30,12 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{session}/{page}")
+    public ResponseEntity<List<Order>> getOrderByPagination(@PathVariable int page) {
+        List<Order> response = orderService.findByPagination(page);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/id/{id}")
     public ResponseEntity<Order> getOrderById(@PathVariable Integer id) {
         Order response = orderService.findById(id);
