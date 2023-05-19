@@ -128,21 +128,31 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderDetailStatusInvalid(orderDetailId);
         }
 
-        StatusStrategy statusStrategy;
-
-        switch (status) {
-            case "prepare" -> statusStrategy = new PrepareStatus(orderDetails, this, menuItemRepository);
-            case "deliver" -> statusStrategy = new DeliverStatus(orderDetails, this, menuItemRepository);
-            case "done" -> statusStrategy = new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
-            case "cancel" -> statusStrategy = new CancelStatus(orderDetails, this, menuItemRepository);
-            default -> throw new BadRequest();
-        }
+        StatusStrategy statusStrategy = chooseStatusStrategy(status, orderDetails);
 
         statusStrategy.setStatus();
 
         orderDetailsRepository.save(orderDetails);
 
         return orderDetails;
+    }
+
+    private StatusStrategy chooseStatusStrategy(String status, OrderDetails orderDetails) {
+        switch (status) {
+            case "prepare" -> {
+                return new PrepareStatus(orderDetails, this, menuItemRepository);
+            }
+            case "deliver" -> {
+                return new DeliverStatus(orderDetails, this, menuItemRepository);
+            }
+            case "done" -> {
+                return new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
+            }
+            case "cancel" -> {
+                return new CancelStatus(orderDetails, this, menuItemRepository);
+            }
+            default -> throw new BadRequest();
+        }
     }
 
     @Override
