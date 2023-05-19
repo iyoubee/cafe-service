@@ -10,6 +10,8 @@ import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
+import id.ac.ui.cs.advprog.cafeservice.pattern.statusStrategy.DoneStatus;
+import id.ac.ui.cs.advprog.cafeservice.pattern.statusStrategy.StatusStrategy;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
@@ -668,4 +670,32 @@ class OrderServiceImplTest {
         assertEquals(exception.getMessage(), expectedMessage);
     }
 
+    @Test
+    void whenDoneOrder() {
+        // Set up mock data
+        order = Order.builder()
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .build();
+
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Menunggu Konfirmasi")
+                .totalPrice(10000)
+                .order(order)
+                .build();
+
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+        orderService.setRestTemplate(restTemplate);
+
+        OrderDetails deliver = orderService.updateOrderDetailStatus(2, "done");
+        assertEquals(orderDetails, deliver);
+    }
 }

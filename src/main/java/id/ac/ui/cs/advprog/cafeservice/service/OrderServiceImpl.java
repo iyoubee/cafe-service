@@ -6,6 +6,7 @@ import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
+import id.ac.ui.cs.advprog.cafeservice.pattern.statusStrategy.*;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
@@ -127,30 +128,31 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderDetailStatusInvalid(orderDetailId);
         }
 
-        switch (status) {
-            case "prepare" -> orderDetails.setStatus("Sedang Disiapkan");
-            case "deliver" -> orderDetails.setStatus("Sedang Diantar");
-            case "done" -> {
-                if (orderDetails.getTotalPrice() != 0)
-                    addToBill(orderDetails);
-                orderDetails.setStatus(DONE_STATUS);
-            }
-            case "cancel" -> {
-                if (orderDetails.getStatus().equals("Menunggu Konfirmasi") && orderDetails.getTotalPrice() != 0) {
-                    MenuItem menuItem = orderDetails.getMenuItem();
-                    menuItem.setStock(menuItem.getStock() + orderDetails.getQuantity());
-                    menuItemRepository.save(menuItem);
-                    orderDetails.setStatus(CANCELLED_STATUS);
-                } else {
-                    throw new OrderDetailStatusInvalid(orderDetailId);
-                }
-            }
-            default -> throw new BadRequest();
-        }
+        StatusStrategy statusStrategy = chooseStatusStrategy(status, orderDetails);
+
+        statusStrategy.setStatus();
 
         orderDetailsRepository.save(orderDetails);
 
         return orderDetails;
+    }
+
+    private StatusStrategy chooseStatusStrategy(String status, OrderDetails orderDetails) {
+        switch (status) {
+            case "prepare" -> {
+                return new PrepareStatus(orderDetails, this, menuItemRepository);
+            }
+            case "deliver" -> {
+                return new DeliverStatus(orderDetails, this, menuItemRepository);
+            }
+            case "done" -> {
+                return new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
+            }
+            case "cancel" -> {
+                return new CancelStatus(orderDetails, this, menuItemRepository);
+            }
+            default -> throw new BadRequest();
+        }
     }
 
     @Override
