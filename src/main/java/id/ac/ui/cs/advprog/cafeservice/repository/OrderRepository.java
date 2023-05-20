@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.cafeservice.repository;
 
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
@@ -18,4 +19,9 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     @NonNull
     Optional<List<Order>> findBySession(@NonNull UUID session);
     void deleteById(@NonNull Integer id);
+    @Query(value = "SELECT COUNT(*) FROM order_details;", nativeQuery = true)
+    int getCount();
+
+    @Query(value = "SELECT * FROM order_menu_item ORDER BY id DESC OFFSET ?1 ROWS FETCH NEXT ?2 ROWS ONLY;", nativeQuery = true)
+    List<Order> getByPage(int offset, int next);
 }

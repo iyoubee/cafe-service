@@ -54,19 +54,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> findByPagination(int page) {
-        int pageSize = 16;
-        List<Order> allOrders = orderRepository.findAll();
-        int totalOrders = allOrders.size();
-        int totalPages = (int) Math.ceil((double) totalOrders / pageSize);
-
-        if (page < 1 || page > totalPages) {
-            return Collections.emptyList();
-        }
-
-        int startIndex = (page - 1) * pageSize;
-        int endIndex = Math.min(startIndex + pageSize, totalOrders);
-
-        return allOrders.subList(startIndex, endIndex);
+        int offset = (page - 1) * 16;
+        int next = offset + 16;
+        return orderRepository.getByPage(offset, next);
     }
 
     @Override
@@ -162,6 +152,11 @@ public class OrderServiceImpl implements OrderService {
         } else {
             orderRepository.deleteById(id);
         }
+    }
+
+    @Override
+    public int getCount() {
+        return orderRepository.getCount();
     }
 
     @Override
