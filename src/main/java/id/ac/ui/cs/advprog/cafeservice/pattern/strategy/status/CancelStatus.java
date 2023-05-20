@@ -1,4 +1,4 @@
-package id.ac.ui.cs.advprog.cafeservice.pattern.statusStrategy;
+package id.ac.ui.cs.advprog.cafeservice.pattern.strategy.status;
 
 import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDetailStatusInvalid;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;

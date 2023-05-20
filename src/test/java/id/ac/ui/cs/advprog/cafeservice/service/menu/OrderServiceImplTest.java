@@ -1,35 +1,24 @@
 package id.ac.ui.cs.advprog.cafeservice.service.menu;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import id.ac.ui.cs.advprog.cafeservice.Util;
-import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
-import id.ac.ui.cs.advprog.cafeservice.pattern.statusStrategy.DoneStatus;
-import id.ac.ui.cs.advprog.cafeservice.pattern.statusStrategy.StatusStrategy;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemService;
-import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
-import id.ac.ui.cs.advprog.cafeservice.service.OrderService;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 
-import org.aspectj.weaver.ast.Or;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
