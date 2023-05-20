@@ -214,105 +214,33 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testFindOrderByPaginationOrderLessThanSixteen() {
-        List<Order> orders = Arrays.asList(
+    void testFindByPage() {
+        List<Order> orders = List.of(
                 Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
-                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build(),
-                Order.builder().id(3).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174002")).build(),
-                Order.builder().id(4).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174003")).build());
-
-        when(orderRepository.findAll()).thenReturn(orders);
-
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build());
+        when(orderRepository.getByPage(0,16)).thenReturn(orders);
         OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
                 menuItemRepository);
+        List<Order> foundOrders = orderService.findByPagination(1);
 
-        List<Order> foundOrdersPage1 = orderService.findByPagination(1);
-        int expectedPageSize = 4;
-        assertEquals(expectedPageSize, foundOrdersPage1.size());
-        assertEquals(orders.subList(0, expectedPageSize), foundOrdersPage1);
-        verify(orderRepository, times(1)).findAll();
+        assertEquals(2, foundOrders.size());
+        assertEquals(orders, foundOrders);
+        verify(orderRepository, times(1)).getByPage(0,16);
     }
 
     @Test
-    void testFindOrderByPaginationOrderEqualToSixteen() {
-        List<Order> orders = new ArrayList<>();
-
-        for (int i = 1; i <= 16; i++) {
-            String uuidString = "123e4567-e89b-12d3-a456-4266141740" + String.format("%02d", i);
-            System.out.println(uuidString);
-            UUID sessionUUID = UUID.fromString(uuidString);
-            Order order = Order.builder()
-                    .id(i)
-                    .session(sessionUUID)
-                    .build();
-            orders.add(order);
-        }
-
-        when(orderRepository.findAll()).thenReturn(orders);
-
+    void testGetCount() {
+        List<Order> orders = List.of(
+                Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build());
+        when(orderRepository.getCount()).thenReturn(2);
         OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
                 menuItemRepository);
+        int foundOrders = orderService.getCount();
 
-        List<Order> foundOrdersPage1 = orderService.findByPagination(1);
-        int expectedPageSize = 16;
-        assertEquals(expectedPageSize, foundOrdersPage1.size());
-        assertEquals(orders.subList(0, expectedPageSize), foundOrdersPage1);
-        verify(orderRepository, times(1)).findAll();
+        assertEquals(2, foundOrders);
+        verify(orderRepository, times(1)).getCount();
     }
-
-    @Test
-    void testFindOrderByPaginationOrderMoreThanSixteen() {
-        List<Order> orders = new ArrayList<>();
-
-        for (int i = 1; i <= 18; i++) {
-            String uuidString = "123e4567-e89b-12d3-a456-4266141740" + String.format("%02d", i);
-            UUID sessionUUID = UUID.fromString(uuidString);
-            Order order = Order.builder()
-                    .id(i)
-                    .session(sessionUUID)
-                    .build();
-            orders.add(order);
-        }
-
-        when(orderRepository.findAll()).thenReturn(orders);
-
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
-                menuItemRepository);
-
-        List<Order> foundOrdersPage1 = orderService.findByPagination(1);
-        int expectedPageSize = 16;
-        assertEquals(expectedPageSize, foundOrdersPage1.size());
-        assertEquals(orders.subList(0, expectedPageSize), foundOrdersPage1);
-        verify(orderRepository, times(1)).findAll();
-    }
-
-    @Test
-    void testFindOrderByPaginationOrderMoreThanSixteenPageTwo() {
-        List<Order> orders = new ArrayList<>();
-
-        for (int i = 1; i <= 18; i++) {
-            String uuidString = "123e4567-e89b-12d3-a456-4266141740" + String.format("%02d", i);
-            UUID sessionUUID = UUID.fromString(uuidString);
-            Order order = Order.builder()
-                    .id(i)
-                    .session(sessionUUID)
-                    .build();
-            orders.add(order);
-        }
-
-        when(orderRepository.findAll()).thenReturn(orders);
-
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
-                menuItemRepository);
-
-        int expectedPageSize = 2;
-        List<Order> foundOrdersPage2 = orderService.findByPagination(2);
-        assertEquals(expectedPageSize, foundOrdersPage2.size());
-        assertEquals(orders.subList(16, 18), foundOrdersPage2);
-        verify(orderRepository, times(1)).findAll();
-
-    }
-
     @Test
     void whenFindByIdWithExistingOrderShouldReturnOrder() {
         Integer id = 1;

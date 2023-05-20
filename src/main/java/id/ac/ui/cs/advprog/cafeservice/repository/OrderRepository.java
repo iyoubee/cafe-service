@@ -21,4 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Integer> {
     void deleteById(@NonNull Integer id);
     @Query(value = "SELECT COUNT(*) FROM order_details;", nativeQuery = true)
     int getCount();
+
+    @Query(value = "SELECT * FROM order_menu_item ORDER BY id DESC OFFSET ?1 ROWS FETCH NEXT ?2 ROWS ONLY;", nativeQuery = true)
+    List<Order> getByPage(int offset, int next);
 }
