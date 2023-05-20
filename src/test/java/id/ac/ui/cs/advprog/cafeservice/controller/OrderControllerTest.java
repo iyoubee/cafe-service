@@ -118,6 +118,25 @@ class OrderControllerTest {
 
         verify(service, atLeastOnce()).findAll();
     }
+    @Test
+    void testGetOrderByPage() throws Exception {
+        mvc.perform(get("/cafe/order/all/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("getOrderByPagination"));
+
+        verify(service, atLeastOnce()).findByPagination(1);
+    }
+
+    @Test
+    void testCountOrder() throws Exception {
+        mvc.perform(get("/cafe/order/all/count")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(handler().methodName("getCount"));
+
+        verify(service, atLeastOnce()).getCount();
+    }
 
     @Test
     void testGetOrderById() throws Exception {

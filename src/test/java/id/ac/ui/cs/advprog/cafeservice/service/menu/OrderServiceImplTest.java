@@ -212,6 +212,35 @@ class OrderServiceImplTest {
         assertEquals(orders, foundOrders);
         verify(orderRepository, times(1)).findAll();
     }
+
+    @Test
+    void testFindByPage() {
+        List<Order> orders = List.of(
+                Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build());
+        when(orderRepository.getByPage(0,16)).thenReturn(orders);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+        List<Order> foundOrders = orderService.findByPagination(1);
+
+        assertEquals(2, foundOrders.size());
+        assertEquals(orders, foundOrders);
+        verify(orderRepository, times(1)).getByPage(0,16);
+    }
+
+    @Test
+    void testGetCount() {
+        List<Order> orders = List.of(
+                Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
+                Order.builder().id(2).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174001")).build());
+        when(orderRepository.getCount()).thenReturn(2);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+        int foundOrders = orderService.getCount();
+
+        assertEquals(2, foundOrders);
+        verify(orderRepository, times(1)).getCount();
+    }
     @Test
     void testWhenFindByIdWithExistingOrderShouldReturnOrder() {
         Integer id = 1;
@@ -313,8 +342,8 @@ class OrderServiceImplTest {
 
         verify(orderRepository, atLeastOnce()).save(any(Order.class));
 
-
     }
+
     @Test
     void testWhenCancelOrder() {
         // Set up mock data
@@ -385,7 +414,7 @@ class OrderServiceImplTest {
 
         try {
             service.updateOrderDetailStatus(2, "cancel");
-        }catch (OrderDetailStatusInvalid e) {
+        } catch (OrderDetailStatusInvalid e) {
             String expectedMessage = "Order Detail status with id 2 invalid";
             String actualMessage = e.getMessage();
 
@@ -415,7 +444,7 @@ class OrderServiceImplTest {
 
         try {
             service.updateOrderDetailStatus(1, "deliver");
-        }catch (OrderDetailStatusInvalid e) {
+        } catch (OrderDetailStatusInvalid e) {
             String expectedMessage = "Order Detail status with id 1 invalid";
             String actualMessage = e.getMessage();
 
@@ -445,7 +474,7 @@ class OrderServiceImplTest {
 
         try {
             OrderDetails prepare = service.updateOrderDetailStatus(1, "abc");
-        }catch (BadRequest e) {
+        } catch (BadRequest e) {
             String expectedMessage = "400 Bad Request";
             String actualMessage = e.getMessage();
 
@@ -476,7 +505,8 @@ class OrderServiceImplTest {
                 Order.builder().id(2).session(session).build());
         when(orderRepository.findBySession(session)).thenReturn(Optional.of(orders));
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
         List<Order> foundOrders = orderService.findBySession(session);
 
         assertEquals(2, foundOrders.size());
@@ -490,7 +520,8 @@ class OrderServiceImplTest {
         List<Order> emptyOrders = new ArrayList<>();
         when(orderRepository.findBySession(session)).thenReturn(Optional.of(emptyOrders));
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
         List<Order> foundOrders = orderService.findBySession(session);
 
         assertEquals(0, foundOrders.size());
@@ -524,7 +555,8 @@ class OrderServiceImplTest {
         expectedResponse.put("subTotal", (long) newOrderDetails.getTotalPrice());
 
         RestTemplate restTemplate = mock(RestTemplate.class);
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService, menuItemRepository);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
         orderService.setRestTemplate(restTemplate);
 
         when(restTemplate.postForObject((billUrl), (entity), (String.class))).thenReturn(expectedResponse.toString());
@@ -541,7 +573,6 @@ class OrderServiceImplTest {
         assertEquals(expectedMessage, exception.getMessage());
     }
 
-
     @Test
     void testUUIDNotFoundException() {
         String expectedMessage = "The UUID is not found";
@@ -557,6 +588,34 @@ class OrderServiceImplTest {
         assertEquals(exception.getMessage(), expectedMessage);
     }
 
+    @Test
+    void whenDoneOrder() {
+        // Set up mock data
+        order = Order.builder()
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .build();
+
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Menunggu Konfirmasi")
+                .totalPrice(10000)
+                .order(order)
+                .build();
+
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+        orderService.setRestTemplate(restTemplate);
+
+        OrderDetails deliver = orderService.updateOrderDetailStatus(2, "done");
+        assertEquals(orderDetails, deliver);
+    }
     @Test
     void testWhenUpdateAndIdNotFoundShouldThrowException() {
         when(orderDetailsRepository.findById(10)).thenReturn(Optional.empty());

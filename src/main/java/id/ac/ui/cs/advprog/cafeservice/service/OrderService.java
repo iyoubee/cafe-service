@@ -13,9 +13,11 @@ import java.util.UUID;
 public interface OrderService {
     List<Order> findAll();
     List<Order> findBySession(UUID session);
+    List<Order> findByPagination(int page);
     Order findById(Integer id);
     Order create(OrderRequest request, String from);
     OrderDetails updateOrderDetailStatus(Integer orderDetailId, String status);
     void delete(Integer id);
 
+    int getCount();
 }
