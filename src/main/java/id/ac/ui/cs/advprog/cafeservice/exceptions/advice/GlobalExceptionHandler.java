@@ -32,7 +32,11 @@ public class GlobalExceptionHandler {
             MenuItemValueEmpty.class,
             MenuItemValueInvalid.class,
             OrderDetailsQtyInvalid.class,
-            OrderDetailsValueEmpty.class
+            OrderDetailsValueEmpty.class,
+            OrderDetailStatusInvalid.class,
+            InvalidJSONException.class,
+            UUIDNotFoundException.class,
+            MenuItemOutOfStockException.class
     })
     public ResponseEntity<Object> requestIsInvalid(Exception exception) {
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;
