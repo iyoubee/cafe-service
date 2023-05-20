@@ -1,15 +1,8 @@
-package id.ac.ui.cs.advprog.cafeservice.pattern.statusStrategy;
+package id.ac.ui.cs.advprog.cafeservice.pattern.strategy.status;
 
-import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
-import id.ac.ui.cs.advprog.cafeservice.service.OrderService;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 public class DoneStatus implements StatusStrategy {

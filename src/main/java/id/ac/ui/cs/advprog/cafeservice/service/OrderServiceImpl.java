@@ -6,7 +6,7 @@ import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
-import id.ac.ui.cs.advprog.cafeservice.pattern.statusStrategy.*;
+import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.status.*;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
