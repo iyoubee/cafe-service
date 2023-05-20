@@ -30,6 +30,12 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/all/count")
+    public ResponseEntity<Integer> getCount() {
+        int response = orderService.getCount();
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{session}")
     public ResponseEntity<List<Order>> getOrderBySession(@PathVariable String session) {
         List<Order> response = orderService.findBySession(UUID.fromString(session));

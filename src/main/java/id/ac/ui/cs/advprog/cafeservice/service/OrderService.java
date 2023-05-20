@@ -19,4 +19,5 @@ public interface OrderService {
     OrderDetails updateOrderDetailStatus(Integer orderDetailId, String status);
     void delete(Integer id);
 
+    int getCount();
 }

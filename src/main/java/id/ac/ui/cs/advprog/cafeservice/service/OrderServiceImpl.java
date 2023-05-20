@@ -69,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
         return allOrders.subList(startIndex, endIndex);
     }
 
+
     @Override
     public Order findById(Integer id) {
         Optional<Order> order = orderRepository.findById(id);
@@ -162,6 +163,11 @@ public class OrderServiceImpl implements OrderService {
         } else {
             orderRepository.deleteById(id);
         }
+    }
+
+    @Override
+    public int getCount() {
+        return orderRepository.getCount();
     }
 
     @Override
