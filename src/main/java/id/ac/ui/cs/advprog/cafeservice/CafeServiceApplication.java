@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.cafeservice;
 
+import id.ac.ui.cs.advprog.cafeservice.validator.MenuItemValidator;
+import id.ac.ui.cs.advprog.cafeservice.validator.OrderValidator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -21,6 +23,16 @@ public class CafeServiceApplication {
     @Bean
     public RestTemplateBuilder restTemplateBuilder(){
         return new RestTemplateBuilder();
+    }
+
+    @Bean
+    public MenuItemValidator menuItemValidator() {
+        return new MenuItemValidator();
+    }
+
+    @Bean
+    public OrderValidator orderValidator() {
+        return new OrderValidator();
     }
 
 }

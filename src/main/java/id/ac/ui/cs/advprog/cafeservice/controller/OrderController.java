@@ -4,6 +4,7 @@ import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderService;
+import id.ac.ui.cs.advprog.cafeservice.validator.OrderValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,8 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class OrderController {
     private final OrderService orderService;
+
+    private final OrderValidator orderValidator;
 
     @GetMapping("/all")
     public ResponseEntity<List<Order>> getAllOrder() {
@@ -50,6 +53,7 @@ public class OrderController {
 
     @PostMapping("/create")
     public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest, @RequestParam(required = false) String from) {
+        orderValidator.validateRequest(orderRequest);
         Order response = orderService.create(orderRequest, from);
         return ResponseEntity.ok(response);
     }

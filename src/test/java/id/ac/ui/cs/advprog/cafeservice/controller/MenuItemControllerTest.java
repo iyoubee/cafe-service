@@ -1,7 +1,5 @@
 package id.ac.ui.cs.advprog.cafeservice.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import id.ac.ui.cs.advprog.cafeservice.Util;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
@@ -10,7 +8,6 @@ import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueEmpty;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueInvalid;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -52,11 +48,11 @@ class MenuItemControllerTest {
     @BeforeEach
     void setUp() {
         menuItem = MenuItem.builder()
-                .id("1")
-                .name("Indomie")
-                .price(5000)
-                .stock(100)
-                .build();
+            .id("1")
+            .name("Indomie")
+            .price(5000)
+            .stock(100)
+            .build();
 
         badRequest = MenuItem.builder()
             .name("Indomie")
@@ -65,16 +61,16 @@ class MenuItemControllerTest {
             .build();
 
         invalidValue = MenuItem.builder()
-        .name("Indomie")
-        .price(-100)
-        .stock(-1)
-        .build();
+            .name("Indomie")
+            .price(-100)
+            .stock(-1)
+            .build();
 
         emptyName =  MenuItem.builder()
-        .name("")
-        .price(1000)
-        .stock(2)
-        .build();
+            .name("")
+            .price(1000)
+            .stock(2)
+            .build();
 
         bodyContent = new Object() {
             public final String name = "Indomie";
@@ -92,7 +88,7 @@ class MenuItemControllerTest {
         when(service.findAll(null)).thenReturn(allMenuItem);
 
         mvc.perform(get("/cafe/menu/all")
-                        .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("getAllMenuItem"))
                 .andExpect(jsonPath("$[0].name").value(menuItem.getName()));
@@ -107,7 +103,7 @@ class MenuItemControllerTest {
         when(service.findAll("available")).thenReturn(availableMenuItem);
 
         mvc.perform(get("/cafe/menu/all?query=available")
-                        .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("getAllMenuItem"))
                 .andExpect(jsonPath("$[0].name").value(menuItem.getName()));
@@ -121,7 +117,7 @@ class MenuItemControllerTest {
         when(service.findById(any(String.class))).thenReturn(menuItem);
 
         mvc.perform(get("/cafe/menu/id/1")
-                    .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("getMenuItemById"))
                 .andExpect(jsonPath("$.name").value(menuItem.getName()));
@@ -132,8 +128,8 @@ class MenuItemControllerTest {
         when(service.create(any(MenuItemRequest.class))).thenReturn(menuItem);
 
         mvc.perform(post("/cafe/menu/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("addMenuItem"))
                 .andExpect(jsonPath("$.name").value(menuItem.getName()));
@@ -191,8 +187,8 @@ class MenuItemControllerTest {
         };
 
         mvc.perform(post("/cafe/menu/create")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -201,8 +197,8 @@ class MenuItemControllerTest {
         when(service.update(any(String.class), any(MenuItemRequest.class))).thenReturn(menuItem);
 
         mvc.perform(put("/cafe/menu/update/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("putMenuItem"))
                 .andExpect(jsonPath("$.name").value(menuItem.getName()));
@@ -223,8 +219,8 @@ class MenuItemControllerTest {
         };
 
         mvc.perform(put("/cafe/menu/update/1")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(Util.mapToJson(bodyContent)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -241,8 +237,8 @@ class MenuItemControllerTest {
         };
 
         mvc.perform(put("/cafe/menu/update/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -259,15 +255,15 @@ class MenuItemControllerTest {
         };
 
         mvc.perform(put("/cafe/menu/update/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void testDeleteMenuItem() throws Exception {
         mvc.perform(delete("/cafe/menu/delete/1")
-                        .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("deleteMenuItem"));
 
@@ -306,9 +302,35 @@ class MenuItemControllerTest {
         when(service.update(anyString(), any(MenuItemRequest.class))).thenThrow(MenuItemDoesNotExistException.class);
 
         mvc.perform(put("/cafe/menu/update/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isNotFound());
+    }
 
+    @Test
+    void testCreateMenuItemWithNullValueShouldThrowBadRequest() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenThrow(BadRequest.class);
+
+        bodyContent = new Object() {
+            public final String name = null;
+
+            public final int price = 5;
+
+            public final int stock = 10;
+        };
+
+        mvc.perform(post("/cafe/menu/create")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testGetMenuItemShouldThrowException() throws Exception {
+        when(service.findById(anyString())).thenThrow(MenuItemDoesNotExistException.class);
+
+        mvc.perform(get("/cafe/menu/id/1")
+            .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
     }
 }
