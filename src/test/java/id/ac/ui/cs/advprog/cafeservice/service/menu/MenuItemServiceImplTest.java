@@ -66,7 +66,7 @@ class MenuItemServiceImplTest {
     }
 
     @Test
-    void whenFindAllMenuItemShouldReturnListOfMenuItem() {
+    void testWhenFindAllMenuItemShouldReturnListOfMenuItem() {
         List<MenuItem> allMenuItem = List.of(menuItem);
 
         when(repository.findAll()).thenReturn(allMenuItem);
@@ -77,7 +77,7 @@ class MenuItemServiceImplTest {
     }
 
     @Test
-    void whenFindAllMenuItemWithQueryShouldReturnListOfAvailableMenuItem() {
+    void testWhenFindAllMenuItemWithQueryShouldReturnListOfAvailableMenuItem() {
         List<MenuItem> availableMenuItems = List.of(menuItem);
 
         when(repository.findByStockGreaterThan(anyInt())).thenReturn(availableMenuItems);
@@ -88,7 +88,7 @@ class MenuItemServiceImplTest {
     }
 
     @Test
-    void whenFindByIdAndFoundShouldReturnMenuItem(){
+    void testWhenFindByIdAndFoundShouldReturnMenuItem(){
         when(repository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
 
         MenuItem result = service.findById("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10");
@@ -97,14 +97,14 @@ class MenuItemServiceImplTest {
     }
 
     @Test
-    void whenFindByIdAndNotFoundShouldThrowException() {
+    void testWhenFindByIdAndNotFoundShouldThrowException() {
         when(repository.findById(any(String.class))).thenReturn(Optional.empty());
 
         Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.findById("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a11"));
     }
 
     @Test
-    void whenCreateMenuItemShouldReturnTheCreatedMenuItem() {
+    void testWhenCreateMenuItemShouldReturnTheCreatedMenuItem() {
         when(repository.save(any(MenuItem.class))).thenAnswer(invocation -> {
             var menuItem = invocation.getArgument(0, MenuItem.class);
             menuItem.setId("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10");
@@ -117,7 +117,7 @@ class MenuItemServiceImplTest {
     }
 
     @Test
-    void whenUpdateMenuItemAndFoundShouldReturnTheUpdatedMenuItem() {
+    void testWhenUpdateMenuItemAndFoundShouldReturnTheUpdatedMenuItem() {
         when(repository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
         when(repository.save(any(MenuItem.class))).thenAnswer(invocation ->
                 invocation.getArgument(0, MenuItem.class));
@@ -128,13 +128,13 @@ class MenuItemServiceImplTest {
     }
 
     @Test
-    void whenUpdateMenuItemAndNotFoundShouldThrowException() {
+    void testWhenUpdateMenuItemAndNotFoundShouldThrowException() {
         when(repository.findById(any(String.class))).thenReturn(Optional.empty());
         Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.update("f20a0089-a4d6-49d7-8be8-9cdc81bd7341", updateRequest));
     }
 
     @Test
-    void whenDeleteMenuItemAndFoundShouldCallDeleteByIdOnRepo() {
+    void testWhenDeleteMenuItemAndFoundShouldCallDeleteByIdOnRepo() {
         when(repository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
 
         service.delete("f20a0089-a4d6-49d7-8be8-9cdc81bd7341");
@@ -142,7 +142,7 @@ class MenuItemServiceImplTest {
     }
 
     @Test
-    void whenDeleteMenuItemAndNotFoundShouldThrowException() {
+    void testWhenDeleteMenuItemAndNotFoundShouldThrowException() {
         when(repository.findById(any(String.class))).thenReturn(Optional.empty());
         Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> {
             service.delete("f20a0089-a4d6-49d7-8be8-9cdc81bd7341");

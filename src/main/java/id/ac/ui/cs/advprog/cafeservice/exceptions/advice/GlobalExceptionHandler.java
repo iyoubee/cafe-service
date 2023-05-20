@@ -12,7 +12,11 @@ import java.time.ZonedDateTime;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(value = {MenuItemDoesNotExistException.class})
+    @ExceptionHandler(value = {
+            MenuItemDoesNotExistException.class,
+            OrderDoesNotExistException.class,
+            OrderDetailDoesNotExistException.class
+    })
     public ResponseEntity<Object> itemNotAvailable(Exception exception) {
         HttpStatus notFound = HttpStatus.NOT_FOUND;
         ErrorTemplate baseException = new ErrorTemplate(
@@ -26,7 +30,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = {
             BadRequest.class,
             MenuItemValueEmpty.class,
-            MenuItemValueInvalid.class
+            MenuItemValueInvalid.class,
+            OrderDetailsQtyInvalid.class,
+            OrderDetailsValueEmpty.class,
+            OrderDetailStatusInvalid.class,
+            InvalidJSONException.class,
+            UUIDNotFoundException.class,
+            MenuItemOutOfStockException.class
     })
     public ResponseEntity<Object> requestIsInvalid(Exception exception) {
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;

@@ -1,11 +1,9 @@
 package id.ac.ui.cs.advprog.cafeservice.controller;
 
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueEmpty;
-import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueInvalid;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemService;
+import id.ac.ui.cs.advprog.cafeservice.validator.MenuItemValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +16,8 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class MenuItemController {
     private final MenuItemService menuItemService;
+
+    private final MenuItemValidator menuItemValidator;
 
     @GetMapping("/all")
     public ResponseEntity<List<MenuItem>> getAllMenuItem(@RequestParam(required = false) String query) {
@@ -33,14 +33,14 @@ public class MenuItemController {
 
     @PostMapping("/create")
     public ResponseEntity<MenuItem> addMenuItem(@RequestBody MenuItemRequest request) {
-        validateRequest(request);
+        menuItemValidator.validateRequest(request);
         MenuItem response = menuItemService.create(request);
         return ResponseEntity.ok(response);
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<MenuItem> putMenuItem(@PathVariable String id, @RequestBody MenuItemRequest request) {
-        validateRequest(request);
+        menuItemValidator.validateRequest(request);
         MenuItem response = menuItemService.update(id, request);
         return ResponseEntity.ok(response);
     }
@@ -51,21 +51,4 @@ public class MenuItemController {
         return ResponseEntity.ok("Deleted Menu Item with id " + id);
     }
 
-    private void validateRequest(MenuItemRequest request) {
-        if(request.getName() == null || request.getPrice() == null || request.getStock() == null){
-            throw new BadRequest();
-        }
-
-        else if(request.getName().equals("")){
-            throw new MenuItemValueEmpty("Name");
-        }
-
-        else if(request.getPrice() < 0){
-            throw new MenuItemValueInvalid("Price");
-        }
-
-        else if(request.getStock() < 0){
-            throw new MenuItemValueInvalid("Stock");
-        }
-    }
 }

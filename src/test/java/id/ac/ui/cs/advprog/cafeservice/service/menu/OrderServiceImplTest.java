@@ -11,25 +11,25 @@ import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemService;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.List;
-import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -242,7 +242,7 @@ class OrderServiceImplTest {
         verify(orderRepository, times(1)).getCount();
     }
     @Test
-    void whenFindByIdWithExistingOrderShouldReturnOrder() {
+    void testWhenFindByIdWithExistingOrderShouldReturnOrder() {
         Integer id = 1;
         Integer totalPrice = 10000;
         Order expectedOrder = new Order(id, UUID.randomUUID(), new ArrayList<>());
@@ -256,7 +256,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenFindByIdWithNonExistingOrderShouldThrowOrderDoesNotExistException() {
+    void testWhenFindByIdWithNonExistingOrderShouldThrowOrderDoesNotExistException() {
         Integer id = 1;
         when(orderRepository.findById(id)).thenReturn(Optional.empty());
         OrderDoesNotExistException exception = assertThrows(OrderDoesNotExistException.class, () -> {
@@ -265,6 +265,7 @@ class OrderServiceImplTest {
         assertEquals("Order with id " + id + " does not exist", exception.getMessage());
         verify(orderRepository, times(1)).findById(id);
     }
+
 
     @Test
     void testIsOrderDoesNotExist() {
@@ -279,7 +280,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenCreateOrderShouldReturnTheCreatedMenuItem() {
+    void testWhenCreateOrderShouldReturnTheCreatedMenuItem() {
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
         when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
@@ -290,7 +291,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenCreateOrderButMenuItemNotFoundShouldThrowException() {
+    void testWhenCreateOrderButMenuItemNotFoundShouldThrowException() {
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
 
         assertThrows(MenuItemDoesNotExistException.class, () -> {
@@ -299,7 +300,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenCreateOrderAndMenuItemOutOfStockShouldThrowMenuItemOutOfStockException() {
+    void testWhenCreateOrderAndMenuItemOutOfStockShouldThrowMenuItemOutOfStockException() {
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
         List<OrderDetailsData> orderDetailsDataList = new ArrayList<>();
         OrderDetailsData orderDetailsData = new OrderDetailsData();
@@ -314,7 +315,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenCreateOrderFromAnotherSquadTheTotalPriceShouldBeZero() {
+    void testWhenCreateOrderFromAnotherSquadTheTotalPriceShouldBeZero() {
         MenuItem item = MenuItem.builder()
                 .id("1")
                 .price(5000)
@@ -344,7 +345,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenCancleOrder() {
+    void testWhenCancelOrder() {
         // Set up mock data
         OrderDetails orderDetails = OrderDetails.builder()
                 .id(2)
@@ -362,7 +363,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenPrepareOrder() {
+    void testWhenPrepareOrder() {
         // Set up mock data
         OrderDetails orderDetails = OrderDetails.builder()
                 .id(2)
@@ -380,7 +381,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenDeliverOrder() {
+    void testWhenDeliverOrder() {
         // Set up mock data
         OrderDetails orderDetails = OrderDetails.builder()
                 .id(2)
@@ -398,7 +399,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenNegativeCancleOrder() {
+    void testWhenNegativeCancelOrder() {
         // Set up mock data
         OrderDetails orderDetails = OrderDetails.builder()
                 .id(2)
@@ -422,7 +423,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenUpdateOrderAndStatusAlreadyDoneOrCanceled() {
+    void testWhenUpdateOrderAndStatusAlreadyDoneOrCanceled() {
         // Set up mock data
         OrderDetails orderDetails = OrderDetails.builder()
                 .id(1)
@@ -452,7 +453,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenUpdateBadRequest() {
+    void testWhenUpdateBadRequest() {
         // Set up mock data
         OrderDetails orderDetails = OrderDetails.builder()
                 .id(1)
@@ -482,7 +483,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenDeleteOrderAndFoundShouldDeleteOrder() {
+    void testWhenDeleteOrderAndFoundShouldDeleteOrder() {
         int orderId = 1;
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(Order.builder().id(orderId).build()));
         service.delete(orderId);
@@ -490,7 +491,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenDeleteOrderAndNotFoundShouldThrowException() {
+    void testWhenDeleteOrderAndNotFoundShouldThrowException() {
         int orderId = 1;
         when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
         assertThrows(OrderDoesNotExistException.class, () -> service.delete(orderId));
@@ -514,7 +515,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenFindBySessionNotExist() {
+    void testWhenFindBySessionNotExist() {
         UUID session = UUID.randomUUID();
         List<Order> emptyOrders = new ArrayList<>();
         when(orderRepository.findBySession(session)).thenReturn(Optional.of(emptyOrders));
@@ -566,7 +567,7 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void whenJSONRequestInvalidShouldThrowException() {
+    void testWhenJSONRequestInvalidShouldThrowException() {
         String expectedMessage = "Invalid request body";
         InvalidJSONException exception = new InvalidJSONException();
         assertEquals(expectedMessage, exception.getMessage());
@@ -615,4 +616,35 @@ class OrderServiceImplTest {
         OrderDetails deliver = orderService.updateOrderDetailStatus(2, "done");
         assertEquals(orderDetails, deliver);
     }
+    @Test
+    void testWhenUpdateAndIdNotFoundShouldThrowException() {
+        when(orderDetailsRepository.findById(10)).thenReturn(Optional.empty());
+        Assertions.assertThrows(OrderDetailDoesNotExistException.class, () ->
+                service.updateOrderDetailStatus(10, "prepare"));
+    }
+
+    @Test
+    void testWhenUpdateOrderAndDone() {
+        // Set up mock data
+        Order orderMock = Order.builder()
+                .session(UUID.randomUUID())
+                .build();
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Menunggu Konfirmasi")
+                .totalPrice(10000)
+                .order(orderMock)
+                .build();
+
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        service.setRestTemplate(restTemplate);
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        OrderDetails updatedOrderDetails = service.updateOrderDetailStatus(2, "done");
+
+        assertEquals("Selesai", updatedOrderDetails.getStatus());
+    }
+
 }
