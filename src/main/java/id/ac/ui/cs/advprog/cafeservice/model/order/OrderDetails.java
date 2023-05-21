@@ -27,4 +27,7 @@ public class OrderDetails {
     private Integer quantity;
     private String status;
     private Integer totalPrice;
+    private Integer idPC;
+    private Integer noPC;
+    private Integer noRuangan;
 }

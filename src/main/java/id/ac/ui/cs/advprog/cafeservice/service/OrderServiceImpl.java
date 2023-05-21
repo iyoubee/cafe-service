@@ -95,6 +95,7 @@ public class OrderServiceImpl implements OrderService {
                     .build();
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
             orderDetails.setOrder(order);
+            setOrderPC(request.getSession(), orderDetails);
             orderDetailsRepository.save(orderDetails);
             orderDetailsList.add(orderDetails);
         }
@@ -185,6 +186,25 @@ public class OrderServiceImpl implements OrderService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
         restTemplate.postForObject(url, entity, String.class);
+    }
+
+    public void setOrderPC(UUID session, OrderDetails orderDetails) {
+        String url = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
+
+        String response = restTemplate.getForObject(url, String.class);
+
+        JSONObject jsonResponse = new JSONObject(response);
+
+        if (jsonResponse.isNull("session")) {
+            throw new UUIDNotFoundException();
+        } else {
+            JSONObject sessionInfo = jsonResponse.getJSONObject("session");
+            JSONObject pcInfo = sessionInfo.getJSONObject("pc");
+
+            orderDetails.setIdPC(pcInfo.getInt("id"));
+            orderDetails.setNoPC(pcInfo.getInt("noPC"));
+            orderDetails.setNoRuangan(pcInfo.getInt("noRuangan"));
+        }
     }
 
 }

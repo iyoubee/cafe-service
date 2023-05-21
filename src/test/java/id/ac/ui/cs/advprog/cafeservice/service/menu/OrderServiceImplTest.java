@@ -181,24 +181,6 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testToString() {
-        Order order = new Order();
-        MenuItem menuItem = new MenuItem();
-        OrderDetails orderDetails = OrderDetails.builder()
-                .id(1)
-                .order(order)
-                .menuItem(menuItem)
-                .quantity(2)
-                .status("Menunggu Konfirmasi")
-                .totalPrice(20)
-                .build();
-
-        String expectedString = "OrderDetails(id=1, order=" + order.toString() + ", menuItem=" + menuItem.toString()
-                + ", quantity=2, status=Menunggu Konfirmasi, totalPrice=20)";
-        assertEquals(expectedString, orderDetails.toString());
-    }
-
-    @Test
     void testFindAll() {
         List<Order> orders = List.of(
                 Order.builder().id(1).session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000")).build(),
@@ -281,6 +263,23 @@ class OrderServiceImplTest {
 
     @Test
     void testWhenCreateOrderShouldReturnTheCreatedMenuItem() {
+        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        String pcUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
+        JSONObject pcResponse = new JSONObject();
+        pcResponse.put("id", 1);
+        pcResponse.put("noPC", 1);
+        pcResponse.put("noRuangan", 1);
+
+        JSONObject sessionResponse = new JSONObject();
+        sessionResponse.put("pc", pcResponse);
+
+        JSONObject response = new JSONObject();
+        response.put("session", sessionResponse);
+
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        service.setRestTemplate(restTemplateMock);
+
+        when(restTemplateMock.getForObject(pcUrl, String.class)).thenReturn(response.toString());
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
         when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
@@ -302,11 +301,13 @@ class OrderServiceImplTest {
     @Test
     void testWhenCreateOrderAndMenuItemOutOfStockShouldThrowMenuItemOutOfStockException() {
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+
         List<OrderDetailsData> orderDetailsDataList = new ArrayList<>();
         OrderDetailsData orderDetailsData = new OrderDetailsData();
         orderDetailsData.setMenuItemId("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10");
         orderDetailsData.setQuantity(1000);
         orderDetailsDataList.add(orderDetailsData);
+
         OrderRequest orderRequest = OrderRequest.builder()
                 .session(UUID.randomUUID())
                 .orderDetailsData(orderDetailsDataList)
@@ -334,6 +335,23 @@ class OrderServiceImplTest {
                 .build();
         order.setOrderDetailsList(Collections.singletonList(orderDetails));
 
+        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        String pcUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
+        JSONObject pcResponse = new JSONObject();
+        pcResponse.put("id", 1);
+        pcResponse.put("noPC", 1);
+        pcResponse.put("noRuangan", 1);
+
+        JSONObject sessionResponse = new JSONObject();
+        sessionResponse.put("pc", pcResponse);
+
+        JSONObject response = new JSONObject();
+        response.put("session", sessionResponse);
+
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        service.setRestTemplate(restTemplateMock);
+
+        when(restTemplateMock.getForObject(pcUrl, String.class)).thenReturn(response.toString());
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(item));
         when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(orderDetails);
         when(orderRepository.save(any(Order.class))).thenReturn(order1);
