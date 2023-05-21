@@ -2,6 +2,7 @@ package id.ac.ui.cs.advprog.cafeservice.repository;
 
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 
@@ -18,4 +19,7 @@ public interface OrderDetailsRepository extends JpaRepository<OrderDetails, Inte
     List<OrderDetails> findAllByOrderId(Integer id);
 
     Optional<OrderDetails> findByOrderIdAndMenuItemId(Integer orderId, String menuItemId);
+
+    @Query(value = "SELECT * FROM order_details WHERE menu_item_id = ?1 ;", nativeQuery = true)
+    List<OrderDetails> getByMenuItem(String id);
 }

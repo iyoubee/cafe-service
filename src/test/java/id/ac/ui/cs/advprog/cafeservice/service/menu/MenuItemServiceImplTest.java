@@ -3,7 +3,10 @@ package id.ac.ui.cs.advprog.cafeservice.service.menu;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
+import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
+import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
+import id.ac.ui.cs.advprog.cafeservice.service.MenuItemService;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,6 +30,8 @@ class MenuItemServiceImplTest {
 
     @Mock
     private MenuItemRepository repository;
+    @Mock
+    private OrderDetailsRepository orderDetailsRepository;
 
     MenuItem menuItem;
 
@@ -135,9 +140,24 @@ class MenuItemServiceImplTest {
 
     @Test
     void testWhenDeleteMenuItemAndFoundShouldCallDeleteByIdOnRepo() {
+        MenuItem newMenuItem = MenuItem.builder()
+                .id("asd")
+                .name("Es Teh")
+                .price(2000)
+                .stock(200)
+                .build();
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(999)
+                .menuItem(newMenuItem)
+                .totalPrice(90)
+                .quantity(5)
+                .status("Sedang Disiapkan")
+                .build();
+        repository.save(newMenuItem);
+        orderDetailsRepository.save(orderDetails);
         when(repository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-
-        service.delete("f20a0089-a4d6-49d7-8be8-9cdc81bd7341");
+        MenuItemService menuItemService = new MenuItemServiceImpl(repository, orderDetailsRepository);
+        menuItemService.delete("asd");
         verify(repository, atLeastOnce()).deleteById(any(String.class));
     }
 
