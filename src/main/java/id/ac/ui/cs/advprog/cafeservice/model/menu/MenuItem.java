@@ -23,7 +23,6 @@ public class MenuItem {
     private String name;
     private Integer price;
     private Integer stock;
-    @JsonIgnore
-    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL)
+    @OneToMany
     private List<OrderDetails> orderDetailsList;
 }
