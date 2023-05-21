@@ -3,7 +3,9 @@ package id.ac.ui.cs.advprog.cafeservice.service;
 import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
+import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
+import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -13,6 +15,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MenuItemServiceImpl implements MenuItemService {
     private final MenuItemRepository menuItemRepository;
+
+    private final OrderDetailsRepository orderDetailsRepository;
 
     @Override
     public List<MenuItem> findAll(String query) {
@@ -55,8 +59,12 @@ public class MenuItemServiceImpl implements MenuItemService {
     public void delete(String id) {
         Optional<MenuItem> menuItem = menuItemRepository.findById(id);
         if (menuItem.isEmpty()) throw new MenuItemDoesNotExistException(id);
+        List<OrderDetails> orderDetailsList = orderDetailsRepository.getByMenuItem(id);
+        for (OrderDetails orderDetails : orderDetailsList) {
+            orderDetails.setMenuItem(null);
+            if (!orderDetails.getStatus().equals("Selesai")) orderDetails.setStatus("Dibatalkan");
+            orderDetailsRepository.save(orderDetails);
+        }
         menuItemRepository.deleteById(id);
     }
-
-
 }
