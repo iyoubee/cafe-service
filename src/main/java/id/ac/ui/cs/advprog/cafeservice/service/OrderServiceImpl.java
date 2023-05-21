@@ -4,13 +4,16 @@ import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderDetailsData;
 import id.ac.ui.cs.advprog.cafeservice.dto.OrderRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
+import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
+import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateFromCafe;
+import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateFromWarnet;
+import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateStrategy;
 import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.status.*;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
-import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,12 +22,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.Collections;
-
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -79,20 +79,20 @@ public class OrderServiceImpl implements OrderService {
             if (orderDetailsData.getQuantity() > menuItem.get().getStock()) {
                 throw new MenuItemOutOfStockException(menuItem.get().getName());
             }
-            OrderDetails orderDetails = OrderDetails.builder()
-                    .menuItem(menuItem.get())
-                    .quantity(orderDetailsData.getQuantity())
-                    .status("Menunggu Konfirmasi")
-                    .totalPrice(menuItem.get().getPrice() * orderDetailsData.getQuantity())
-                    .build();
+            CreateStrategy createStrategy;
+            if (from != null && from.equalsIgnoreCase("warnet")) {
+                createStrategy = new CreateFromWarnet(menuItem.get(), orderDetailsData);
+            } else {
+                createStrategy = new CreateFromCafe(menuItem.get(), orderDetailsData);
+            }
+
+            OrderDetails orderDetails = createStrategy.create();
+
             MenuItemRequest menuItemRequest = MenuItemRequest.builder()
                     .name(menuItem.get().getName())
                     .price(menuItem.get().getPrice())
                     .stock(menuItem.get().getStock() - orderDetailsData.getQuantity())
                     .build();
-            if (from != null && from.equalsIgnoreCase("warnet")) {
-                orderDetails.setTotalPrice(0);
-            }
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
             orderDetails.setOrder(order);
             orderDetailsRepository.save(orderDetails);
