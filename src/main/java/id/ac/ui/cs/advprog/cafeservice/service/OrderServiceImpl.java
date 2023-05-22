@@ -101,11 +101,13 @@ public class OrderServiceImpl implements OrderService {
                     .build();
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
 
-            orderDetailsFuture.thenAcceptAsync(orderDetails -> {
-                setOrderPC(request.getSession(), orderDetails, executorService);
-                orderDetails.setOrder(order);
-                orderDetailsRepository.save(orderDetails);
-            }, executorService);
+            orderDetailsFuture.thenAcceptAsync(orderDetails ->
+                    setOrderPC(request.getSession(), orderDetails, executorService), executorService);
+            orderDetailsFuture.thenAcceptAsync(orderDetails ->
+                    orderDetails.setOrder(order),executorService);
+
+            OrderDetails orderDetails = orderDetailsFuture.join();
+            orderDetailsRepository.save(orderDetails);
             orderDetailsFuture.thenAcceptAsync(orderDetailsList::add, executorService);
         }
         order.setOrderDetailsList(orderDetailsList);
@@ -207,9 +209,16 @@ public class OrderServiceImpl implements OrderService {
             JSONObject sessionInfo = jsonResponse.getJSONObject("session");
             JSONObject pcInfo = sessionInfo.getJSONObject("pc");
 
-            CompletableFuture.runAsync(() -> orderDetails.setIdPC(pcInfo.getInt("id")), executorService);
-            CompletableFuture.runAsync(() -> orderDetails.setNoPC(pcInfo.getInt("noPC")), executorService);
-            CompletableFuture.runAsync(() -> orderDetails.setNoRuangan(pcInfo.getInt("noRuangan")), executorService);
+            CompletableFuture<Void> setIdPc = CompletableFuture.runAsync(() ->
+                    orderDetails.setIdPC(pcInfo.getInt("id")), executorService);
+            CompletableFuture<Void> setNoPc = CompletableFuture.runAsync(() ->
+                    orderDetails.setNoPC(pcInfo.getInt("noPC")), executorService);
+            CompletableFuture<Void> setNoRuangan = CompletableFuture.runAsync(() ->
+                    orderDetails.setNoRuangan(pcInfo.getInt("noRuangan")), executorService);
+
+            CompletableFuture<Void> setOrderPC = CompletableFuture.allOf(setIdPc, setNoPc, setNoRuangan);
+            setOrderPC.join();
+
         } catch (HttpClientErrorException e) {
             throw new UUIDNotFoundException();
         }
