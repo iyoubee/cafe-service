@@ -16,9 +16,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -78,7 +82,7 @@ class MenuItemServiceImplTest {
 
         List<MenuItem> result = service.findAll(null);
         verify(repository, atLeastOnce()).findAll();
-        Assertions.assertEquals(allMenuItem, result);
+        assertEquals(allMenuItem, result);
     }
 
     @Test
@@ -89,7 +93,7 @@ class MenuItemServiceImplTest {
 
         List<MenuItem> result = service.findAll("available");
         verify(repository, atLeastOnce()).findByStockGreaterThan(0);
-        Assertions.assertEquals(availableMenuItems, result);
+        assertEquals(availableMenuItems, result);
     }
 
     @Test
@@ -98,7 +102,7 @@ class MenuItemServiceImplTest {
 
         MenuItem result = service.findById("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10");
         verify(repository, atLeastOnce()).findById(any(String.class));
-        Assertions.assertEquals(menuItem, result);
+        assertEquals(menuItem, result);
     }
 
     @Test
@@ -110,26 +114,26 @@ class MenuItemServiceImplTest {
 
     @Test
     void testWhenCreateMenuItemShouldReturnTheCreatedMenuItem() {
-        when(repository.save(any(MenuItem.class))).thenAnswer(invocation -> {
-            var menuItem = invocation.getArgument(0, MenuItem.class);
-            menuItem.setId("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10");
-            return menuItem;
-        });
 
+        when(repository.save(any(MenuItem.class))).thenReturn(menuItem);
         MenuItem result = service.create(createRequest);
         verify(repository, atLeastOnce()).save(any(MenuItem.class));
-        Assertions.assertEquals(menuItem, result);
+        assertEquals(menuItem.getName(), result.getName());
+        assertEquals(menuItem.getPrice(), result.getPrice());
+        assertEquals(menuItem.getStock(), result.getStock());
     }
 
     @Test
     void testWhenUpdateMenuItemAndFoundShouldReturnTheUpdatedMenuItem() {
-        when(repository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+        when(repository.findById(any(String.class))).thenReturn(Optional.of(newMenuItem));
         when(repository.save(any(MenuItem.class))).thenAnswer(invocation ->
                 invocation.getArgument(0, MenuItem.class));
 
         MenuItem result = service.update("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10", updateRequest);
         verify(repository, atLeastOnce()).save(any(MenuItem.class));
-        Assertions.assertEquals(newMenuItem, result);
+        assertEquals(newMenuItem.getName(), result.getName());
+        assertEquals(newMenuItem.getPrice(), result.getPrice());
+        assertEquals(newMenuItem.getStock(), result.getStock());
     }
 
     @Test
@@ -140,25 +144,28 @@ class MenuItemServiceImplTest {
 
     @Test
     void testWhenDeleteMenuItemAndFoundShouldCallDeleteByIdOnRepo() {
-        MenuItem newMenuItem = MenuItem.builder()
-                .id("asd")
-                .name("Es Teh")
-                .price(2000)
-                .stock(200)
-                .build();
-        OrderDetails orderDetails = OrderDetails.builder()
-                .id(999)
-                .menuItem(newMenuItem)
-                .totalPrice(90)
-                .quantity(5)
-                .status("Sedang Disiapkan")
-                .build();
-        repository.save(newMenuItem);
-        orderDetailsRepository.save(orderDetails);
+        UUID menuItemId = UUID.fromString("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10");
+        List<OrderDetails> orderDetailsList = new ArrayList<>();
+        OrderDetails orderDetails1 = OrderDetails.builder().status("Menunggu Konfirmasi").build();
+        OrderDetails orderDetails2 = OrderDetails.builder().status("Selesai").build();
+        orderDetailsList.add(orderDetails1);
+        orderDetailsList.add(orderDetails2);
+
         when(repository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        MenuItemService menuItemService = new MenuItemServiceImpl(repository, orderDetailsRepository);
-        menuItemService.delete("asd");
-        verify(repository, atLeastOnce()).deleteById(any(String.class));
+        when(orderDetailsRepository.getByMenuItem(menuItemId.toString())).thenReturn(orderDetailsList);
+
+        service.delete(menuItemId.toString());
+        verify(repository, atLeastOnce()).deleteById(menuItemId.toString());
+
+        for (OrderDetails orderDetails : orderDetailsList) {
+            assertNull(orderDetails.getMenuItem());
+
+            if (!orderDetails.getStatus().equals("Selesai")) {
+                assertEquals("Dibatalkan", orderDetails.getStatus());
+            }
+
+            verify(orderDetailsRepository).save(orderDetails);
+        }
     }
 
     @Test

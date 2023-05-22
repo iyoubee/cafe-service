@@ -22,12 +22,16 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @RequiredArgsConstructor
@@ -69,6 +73,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order create(OrderRequest request, String from) {
+        ExecutorService executorService = Executors.newCachedThreadPool();
         var order = Order.builder().session(request.getSession()).build();
         List<OrderDetails> orderDetailsList = new ArrayList<>();
         for (OrderDetailsData orderDetailsData : request.getOrderDetailsData()) {
@@ -79,6 +84,7 @@ public class OrderServiceImpl implements OrderService {
             if (orderDetailsData.getQuantity() > menuItem.get().getStock()) {
                 throw new MenuItemOutOfStockException(menuItem.get().getName());
             }
+
             CreateStrategy createStrategy;
             if (from != null && from.equalsIgnoreCase("warnet")) {
                 createStrategy = new CreateFromWarnet(menuItem.get(), orderDetailsData);
@@ -86,7 +92,7 @@ public class OrderServiceImpl implements OrderService {
                 createStrategy = new CreateFromCafe(menuItem.get(), orderDetailsData);
             }
 
-            OrderDetails orderDetails = createStrategy.create();
+            CompletableFuture<OrderDetails> orderDetailsFuture = CompletableFuture.supplyAsync(createStrategy::create, executorService);
 
             MenuItemRequest menuItemRequest = MenuItemRequest.builder()
                     .name(menuItem.get().getName())
@@ -94,10 +100,15 @@ public class OrderServiceImpl implements OrderService {
                     .stock(menuItem.get().getStock() - orderDetailsData.getQuantity())
                     .build();
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
-            orderDetails.setOrder(order);
-            setOrderPC(request.getSession(), orderDetails);
+
+            orderDetailsFuture.thenAcceptAsync(orderDetails ->
+                    setOrderPC(request.getSession(), orderDetails, executorService), executorService);
+            orderDetailsFuture.thenAcceptAsync(orderDetails ->
+                    orderDetails.setOrder(order),executorService);
+
+            OrderDetails orderDetails = orderDetailsFuture.join();
             orderDetailsRepository.save(orderDetails);
-            orderDetailsList.add(orderDetails);
+            orderDetailsFuture.thenAcceptAsync(orderDetailsList::add, executorService);
         }
         order.setOrderDetailsList(orderDetailsList);
         orderRepository.save(order);
@@ -188,23 +199,30 @@ public class OrderServiceImpl implements OrderService {
         restTemplate.postForObject(url, entity, String.class);
     }
 
-    public void setOrderPC(UUID session, OrderDetails orderDetails) {
+    public void setOrderPC(UUID session, OrderDetails orderDetails, ExecutorService executorService) {
         String url = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
 
-        String response = restTemplate.getForObject(url, String.class);
+        try {
+            String response = restTemplate.getForObject(url, String.class);
 
-        JSONObject jsonResponse = new JSONObject(response);
-
-        if (jsonResponse.isNull("session")) {
-            throw new UUIDNotFoundException();
-        } else {
+            JSONObject jsonResponse = new JSONObject(response);
             JSONObject sessionInfo = jsonResponse.getJSONObject("session");
             JSONObject pcInfo = sessionInfo.getJSONObject("pc");
 
-            orderDetails.setIdPC(pcInfo.getInt("id"));
-            orderDetails.setNoPC(pcInfo.getInt("noPC"));
-            orderDetails.setNoRuangan(pcInfo.getInt("noRuangan"));
+            CompletableFuture<Void> setIdPc = CompletableFuture.runAsync(() ->
+                    orderDetails.setIdPC(pcInfo.getInt("id")), executorService);
+            CompletableFuture<Void> setNoPc = CompletableFuture.runAsync(() ->
+                    orderDetails.setNoPC(pcInfo.getInt("noPC")), executorService);
+            CompletableFuture<Void> setNoRuangan = CompletableFuture.runAsync(() ->
+                    orderDetails.setNoRuangan(pcInfo.getInt("noRuangan")), executorService);
+
+            CompletableFuture<Void> setOrderPC = CompletableFuture.allOf(setIdPc, setNoPc, setNoRuangan);
+            setOrderPC.join();
+
+        } catch (HttpClientErrorException e) {
+            throw new UUIDNotFoundException();
         }
+
     }
 
 }
