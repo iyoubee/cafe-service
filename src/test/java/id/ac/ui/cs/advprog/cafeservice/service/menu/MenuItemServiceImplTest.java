@@ -110,12 +110,8 @@ class MenuItemServiceImplTest {
 
     @Test
     void testWhenCreateMenuItemShouldReturnTheCreatedMenuItem() {
-        when(repository.save(any(MenuItem.class))).thenAnswer(invocation -> {
-            var menuItem = invocation.getArgument(0, MenuItem.class);
-            menuItem.setId("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10");
-            return menuItem;
-        });
 
+        when(repository.save(any(MenuItem.class))).thenReturn(menuItem);
         MenuItem result = service.create(createRequest);
         verify(repository, atLeastOnce()).save(any(MenuItem.class));
         Assertions.assertEquals(menuItem.getName(), result.getName());
@@ -125,7 +121,7 @@ class MenuItemServiceImplTest {
 
     @Test
     void testWhenUpdateMenuItemAndFoundShouldReturnTheUpdatedMenuItem() {
-        when(repository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+        when(repository.findById(any(String.class))).thenReturn(Optional.of(newMenuItem));
         when(repository.save(any(MenuItem.class))).thenAnswer(invocation ->
                 invocation.getArgument(0, MenuItem.class));
 
