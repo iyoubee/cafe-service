@@ -281,7 +281,6 @@ class OrderServiceImplTest {
 
         when(restTemplateMock.getForObject(pcUrl, String.class)).thenReturn(response.toString());
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
         Order result = service.create(orderRequest, null);
@@ -353,8 +352,6 @@ class OrderServiceImplTest {
 
         when(restTemplateMock.getForObject(pcUrl, String.class)).thenReturn(response.toString());
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(item));
-        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(orderDetails);
-        when(orderRepository.save(any(Order.class))).thenReturn(order1);
 
         Order result = service.create(orderRequest, "warnet");
 

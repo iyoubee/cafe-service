@@ -3,26 +3,28 @@ package id.ac.ui.cs.advprog.cafeservice.pattern.strategy.status;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
-import org.springframework.web.client.RestTemplate;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DoneStatus implements StatusStrategy {
     OrderDetails orderDetails;
     OrderServiceImpl orderService;
     MenuItemRepository menuItemRepository;
-    private RestTemplate restTemplate;
 
-    public DoneStatus(OrderDetails orderDetails, OrderServiceImpl orderService, MenuItemRepository menuItemRepository, RestTemplate restTemplate) {
+    public DoneStatus(OrderDetails orderDetails, OrderServiceImpl orderService, MenuItemRepository menuItemRepository) {
         this.orderDetails = orderDetails;
         this.orderService = orderService;
         this.menuItemRepository = menuItemRepository;
-        this.restTemplate = restTemplate;
     }
 
     @Override
     public void setStatus() {
+        ExecutorService executorService = Executors.newCachedThreadPool();
         if (orderDetails.getTotalPrice() != 0) {
-            orderService.addToBill(orderDetails);
+            CompletableFuture.runAsync(() -> orderService.addToBill(orderDetails), executorService);
         }
-        orderDetails.setStatus("Selesai");
+        CompletableFuture.runAsync(() -> orderDetails.setStatus("Selesai"), executorService);
     }
 }
