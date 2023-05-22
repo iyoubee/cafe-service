@@ -262,24 +262,11 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testWhenCreateOrderShouldReturnTheCreatedMenuItem() {
-        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
-        String pcUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
-        JSONObject pcResponse = new JSONObject();
-        pcResponse.put("id", 1);
-        pcResponse.put("noPC", 1);
-        pcResponse.put("noRuangan", 1);
-
-        JSONObject sessionResponse = new JSONObject();
-        sessionResponse.put("pc", pcResponse);
-
-        JSONObject response = new JSONObject();
-        response.put("session", sessionResponse);
+    void testWhenCreateOrderShouldReturnTheCreatedOrder() {
 
         RestTemplate restTemplateMock = mock(RestTemplate.class);
         service.setRestTemplate(restTemplateMock);
 
-        when(restTemplateMock.getForObject(pcUrl, String.class)).thenReturn(response.toString());
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 

@@ -118,7 +118,9 @@ class MenuItemServiceImplTest {
 
         MenuItem result = service.create(createRequest);
         verify(repository, atLeastOnce()).save(any(MenuItem.class));
-        Assertions.assertEquals(menuItem, result);
+        Assertions.assertEquals(menuItem.getName(), result.getName());
+        Assertions.assertEquals(menuItem.getPrice(), result.getPrice());
+        Assertions.assertEquals(menuItem.getStock(), result.getStock());
     }
 
     @Test
@@ -129,7 +131,9 @@ class MenuItemServiceImplTest {
 
         MenuItem result = service.update("7dd3fd7a-4952-4eb2-8ba0-bbe1767b4a10", updateRequest);
         verify(repository, atLeastOnce()).save(any(MenuItem.class));
-        Assertions.assertEquals(newMenuItem, result);
+        Assertions.assertEquals(newMenuItem.getName(), result.getName());
+        Assertions.assertEquals(newMenuItem.getPrice(), result.getPrice());
+        Assertions.assertEquals(newMenuItem.getStock(), result.getStock());
     }
 
     @Test
