@@ -84,6 +84,7 @@ public class OrderServiceImpl implements OrderService {
             if (orderDetailsData.getQuantity() > menuItem.get().getStock()) {
                 throw new MenuItemOutOfStockException(menuItem.get().getName());
             }
+
             CreateStrategy createStrategy;
             if (from != null && from.equalsIgnoreCase("warnet")) {
                 createStrategy = new CreateFromWarnet(menuItem.get(), orderDetailsData);

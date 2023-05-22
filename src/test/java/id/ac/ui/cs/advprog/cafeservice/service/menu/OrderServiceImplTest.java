@@ -350,7 +350,6 @@ class OrderServiceImplTest {
         RestTemplate restTemplateMock = mock(RestTemplate.class);
         service.setRestTemplate(restTemplateMock);
 
-        when(restTemplateMock.getForObject(pcUrl, String.class)).thenReturn(response.toString());
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(item));
 
         Order result = service.create(orderRequest, "warnet");
