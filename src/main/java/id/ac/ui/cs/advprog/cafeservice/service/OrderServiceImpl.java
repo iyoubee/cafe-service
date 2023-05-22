@@ -145,7 +145,7 @@ public class OrderServiceImpl implements OrderService {
                 return new DeliverStatus(orderDetails, this, menuItemRepository);
             }
             case "done" -> {
-                return new DoneStatus(orderDetails, this, menuItemRepository);
+                return new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
             }
             case "cancel" -> {
                 return new CancelStatus(orderDetails, this, menuItemRepository);
