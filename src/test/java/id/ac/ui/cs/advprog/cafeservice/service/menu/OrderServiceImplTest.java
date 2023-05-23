@@ -26,6 +26,8 @@ import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -262,26 +264,9 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void testWhenCreateOrderShouldReturnTheCreatedMenuItem() {
-        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
-        String pcUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
-        JSONObject pcResponse = new JSONObject();
-        pcResponse.put("id", 1);
-        pcResponse.put("noPC", 1);
-        pcResponse.put("noRuangan", 1);
+    void testWhenCreateOrderShouldReturnTheCreatedOrder() {
 
-        JSONObject sessionResponse = new JSONObject();
-        sessionResponse.put("pc", pcResponse);
-
-        JSONObject response = new JSONObject();
-        response.put("session", sessionResponse);
-
-        RestTemplate restTemplateMock = mock(RestTemplate.class);
-        service.setRestTemplate(restTemplateMock);
-
-        when(restTemplateMock.getForObject(pcUrl, String.class)).thenReturn(response.toString());
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
-        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(newOrderDetails);
         when(orderRepository.save(any(Order.class))).thenReturn(order);
 
         Order result = service.create(orderRequest, null);
@@ -351,10 +336,7 @@ class OrderServiceImplTest {
         RestTemplate restTemplateMock = mock(RestTemplate.class);
         service.setRestTemplate(restTemplateMock);
 
-        when(restTemplateMock.getForObject(pcUrl, String.class)).thenReturn(response.toString());
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(item));
-        when(orderDetailsRepository.save(any(OrderDetails.class))).thenReturn(orderDetails);
-        when(orderRepository.save(any(Order.class))).thenReturn(order1);
 
         Order result = service.create(orderRequest, "warnet");
 
@@ -663,6 +645,30 @@ class OrderServiceImplTest {
         OrderDetails updatedOrderDetails = service.updateOrderDetailStatus(2, "done");
 
         assertEquals("Selesai", updatedOrderDetails.getStatus());
+    }
+
+    @Test
+    void testSetPCInformation() throws Exception {
+        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        OrderDetails orderDetails = new OrderDetails();
+        ExecutorService executorService = Executors.newFixedThreadPool(3);
+
+        // Set up mock response
+        String mockResponse = "{\"session\": {\"pc\": {\"id\": 123, \"noPC\": 1, \"noRuangan\": 2}}}";
+        String mockUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
+
+        // Set up RestTemplate mock
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        when(restTemplateMock.getForObject(mockUrl, String.class)).thenReturn(mockResponse);
+
+        service.setRestTemplate(restTemplateMock);
+
+        service.setOrderPC(session, orderDetails, executorService);
+        assertEquals(123, orderDetails.getIdPC());
+        assertEquals(1, orderDetails.getNoPC());
+        assertEquals(2, orderDetails.getNoRuangan());
+
+
     }
 
 }
