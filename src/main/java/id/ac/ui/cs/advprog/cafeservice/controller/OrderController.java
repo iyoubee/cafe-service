@@ -18,7 +18,6 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class OrderController {
     private final OrderService orderService;
-
     private final OrderValidator orderValidator;
 
     @GetMapping("/all")

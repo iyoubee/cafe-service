@@ -18,7 +18,6 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 public class MenuItemServiceImpl implements MenuItemService {
     private final MenuItemRepository menuItemRepository;
-
     private final OrderDetailsRepository orderDetailsRepository;
 
     @Override
@@ -26,14 +25,15 @@ public class MenuItemServiceImpl implements MenuItemService {
         if (query != null && query.equals("available")) {
             return menuItemRepository.findByStockGreaterThan(0);
         }
+
         return menuItemRepository.findAll();
     }
 
     @Override
     public MenuItem findById(String id) {
-
         Optional<MenuItem> menuItem = menuItemRepository.findById(id);
         if (menuItem.isEmpty()) throw new MenuItemDoesNotExistException(id);
+
         return menuItem.get();
     }
 
@@ -41,16 +41,18 @@ public class MenuItemServiceImpl implements MenuItemService {
     public MenuItem create(MenuItemRequest request) {
         MenuItem menuItem = new MenuItem();
         setMenuItem(menuItem, request);
+
         return menuItemRepository.save(menuItem);
     }
 
     @Override
     public MenuItem update(String id, MenuItemRequest request) {
-
         Optional<MenuItem> item = menuItemRepository.findById(id);
         if (item.isEmpty()) throw new MenuItemDoesNotExistException(id);
+
         MenuItem menuItem = item.get();
         setMenuItem(menuItem, request);
+
         return menuItemRepository.save(menuItem);
     }
 
@@ -65,12 +67,14 @@ public class MenuItemServiceImpl implements MenuItemService {
     public void delete(String id) {
         Optional<MenuItem> menuItem = menuItemRepository.findById(id);
         if (menuItem.isEmpty()) throw new MenuItemDoesNotExistException(id);
+
         List<OrderDetails> orderDetailsList = orderDetailsRepository.getByMenuItem(id);
         for (OrderDetails orderDetails : orderDetailsList) {
             orderDetails.setMenuItem(null);
             if (!orderDetails.getStatus().equals("Selesai")) orderDetails.setStatus("Dibatalkan");
             orderDetailsRepository.save(orderDetails);
         }
+
         menuItemRepository.deleteById(id);
     }
 }

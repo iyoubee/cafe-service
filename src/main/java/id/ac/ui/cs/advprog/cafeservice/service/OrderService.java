@@ -18,6 +18,5 @@ public interface OrderService {
     Order create(OrderRequest request, String from);
     OrderDetails updateOrderDetailStatus(Integer orderDetailId, String status);
     void delete(Integer id);
-
     int getCount();
 }

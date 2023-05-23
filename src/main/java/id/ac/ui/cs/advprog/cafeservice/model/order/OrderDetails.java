@@ -17,7 +17,6 @@ public class OrderDetails {
     @Id
     @GeneratedValue
     private Integer id;
-
     @JsonBackReference
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "order_id")
