@@ -167,9 +167,6 @@ public class OrderServiceImpl implements OrderService {
                 return new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
             }
             case "cancel" -> {
-                if (!orderDetails.getStatus().equalsIgnoreCase("Menunggu konfirmasi")) {
-                    throw new UpdateStatusInvalid(orderDetails.getStatus(), CANCELLED_STATUS);
-                }
                 return new CancelStatus(orderDetails, this, menuItemRepository);
             }
             default -> throw new BadRequest();
