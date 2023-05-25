@@ -21,9 +21,7 @@ public class OrderDetails {
     @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "order_id")
     private Order order;
-    @JsonBackReference
     @ManyToOne
-    @JoinColumn(name = "menu_item_id")
     private MenuItem menuItem;
     private Integer quantity;
     private String status;

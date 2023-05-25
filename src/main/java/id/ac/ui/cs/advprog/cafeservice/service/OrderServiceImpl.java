@@ -149,15 +149,27 @@ public class OrderServiceImpl implements OrderService {
     private StatusStrategy chooseStatusStrategy(String status, OrderDetails orderDetails) {
         switch (status) {
             case "prepare" -> {
+                if (!orderDetails.getStatus().equalsIgnoreCase("Menunggu konfirmasi")) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), "Sedang Disiapkan");
+                }
                 return new PrepareStatus(orderDetails, this, menuItemRepository);
             }
             case "deliver" -> {
+                if (!orderDetails.getStatus().equalsIgnoreCase("Sedang disiapkan")) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), "Sedang Diantar");
+                }
                 return new DeliverStatus(orderDetails, this, menuItemRepository);
             }
             case "done" -> {
+                if (!orderDetails.getStatus().equalsIgnoreCase("Sedang diantar")) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), DONE_STATUS);
+                }
                 return new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
             }
             case "cancel" -> {
+                if (!orderDetails.getStatus().equalsIgnoreCase("Menunggu konfirmasi")) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), CANCELLED_STATUS);
+                }
                 return new CancelStatus(orderDetails, this, menuItemRepository);
             }
             default -> throw new BadRequest();
