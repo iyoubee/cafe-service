@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.cafeservice.validator.MenuItemValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -15,6 +16,7 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class MenuItemController {
     private final MenuItemService menuItemService;
+
     private final MenuItemValidator menuItemValidator;
 
     @GetMapping("/all")

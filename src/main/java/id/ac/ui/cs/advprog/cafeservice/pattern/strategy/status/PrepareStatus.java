@@ -5,6 +5,7 @@ import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 
 public class PrepareStatus implements StatusStrategy{
+
     OrderDetails orderDetails;
     OrderServiceImpl orderService;
     MenuItemRepository menuItemRepository;
