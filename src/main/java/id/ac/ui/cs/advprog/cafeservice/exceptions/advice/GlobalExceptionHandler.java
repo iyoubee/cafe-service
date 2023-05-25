@@ -36,7 +36,8 @@ public class GlobalExceptionHandler {
             OrderDetailStatusInvalid.class,
             InvalidJSONException.class,
             UUIDNotFoundException.class,
-            MenuItemOutOfStockException.class
+            MenuItemOutOfStockException.class,
+            UpdateStatusInvalid.class
     })
     public ResponseEntity<Object> requestIsInvalid(Exception exception) {
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;

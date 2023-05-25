@@ -24,7 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,10 +39,8 @@ public class OrderServiceImpl implements OrderService {
     private final OrderDetailsRepository orderDetailsRepository;
     private final MenuItemService menuItemService;
     private final MenuItemRepository menuItemRepository;
-
     private RestTemplate restTemplate;
     private static final String CANCELLED_STATUS = "Dibatalkan";
-
     private static final String DONE_STATUS = "Selesai";
 
     @Autowired
@@ -74,32 +71,27 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order create(OrderRequest request, String from) {
         ExecutorService executorService = Executors.newCachedThreadPool();
-        var order = Order.builder().session(request.getSession()).build();
+        Order order = Order.builder().session(request.getSession()).build();
         List<OrderDetails> orderDetailsList = new ArrayList<>();
         for (OrderDetailsData orderDetailsData : request.getOrderDetailsData()) {
-            var menuItem = menuItemRepository.findById(orderDetailsData.getMenuItemId());
-            if (menuItem.isEmpty()) {
+            Optional<MenuItem> menuItemOptional = menuItemRepository.findById(orderDetailsData.getMenuItemId());
+            if (menuItemOptional.isEmpty()) {
                 throw new MenuItemDoesNotExistException(orderDetailsData.getMenuItemId());
             }
-            if (orderDetailsData.getQuantity() > menuItem.get().getStock()) {
-                throw new MenuItemOutOfStockException(menuItem.get().getName());
+
+            MenuItem menuItem = menuItemOptional.get();
+
+            if (orderDetailsData.getQuantity() > menuItem.getStock()) {
+                throw new MenuItemOutOfStockException(menuItem.getName());
             }
 
-            CreateStrategy createStrategy;
-            if (from != null && from.equalsIgnoreCase("warnet")) {
-                createStrategy = new CreateFromWarnet(menuItem.get(), orderDetailsData);
-            } else {
-                createStrategy = new CreateFromCafe(menuItem.get(), orderDetailsData);
-            }
+            CreateStrategy createStrategy = chooseCreateStrategy(from, menuItem, orderDetailsData);
+
+            MenuItemRequest menuItemRequest = buildMenuItemRequest(menuItem, orderDetailsData);
+
+            menuItemService.update(menuItem.getId(), menuItemRequest);
 
             CompletableFuture<OrderDetails> orderDetailsFuture = CompletableFuture.supplyAsync(createStrategy::create, executorService);
-
-            MenuItemRequest menuItemRequest = MenuItemRequest.builder()
-                    .name(menuItem.get().getName())
-                    .price(menuItem.get().getPrice())
-                    .stock(menuItem.get().getStock() - orderDetailsData.getQuantity())
-                    .build();
-            menuItemService.update(menuItem.get().getId(), menuItemRequest);
 
             orderDetailsFuture.thenAcceptAsync(orderDetails ->
                     setOrderPC(request.getSession(), orderDetails, executorService), executorService);
@@ -115,9 +107,24 @@ public class OrderServiceImpl implements OrderService {
         return order;
     }
 
+    private MenuItemRequest buildMenuItemRequest(MenuItem menuItem, OrderDetailsData orderDetailsData) {
+        return MenuItemRequest.builder()
+                .name(menuItem.getName())
+                .price(menuItem.getPrice())
+                .stock(menuItem.getStock() - orderDetailsData.getQuantity())
+                .build();
+    }
+
+    private CreateStrategy chooseCreateStrategy(String from, MenuItem menuItem, OrderDetailsData orderDetailsData) {
+        if (from != null && from.equalsIgnoreCase("warnet")) {
+            return new CreateFromWarnet(menuItem, orderDetailsData);
+        } else {
+            return new CreateFromCafe(menuItem, orderDetailsData);
+        }
+    }
+
     @Override
     public OrderDetails updateOrderDetailStatus(Integer orderDetailId, String status) {
-
         Optional<OrderDetails> optionalOrderDetails = orderDetailsRepository.findById(orderDetailId);
 
         if (optionalOrderDetails.isEmpty()) {
@@ -142,12 +149,21 @@ public class OrderServiceImpl implements OrderService {
     private StatusStrategy chooseStatusStrategy(String status, OrderDetails orderDetails) {
         switch (status) {
             case "prepare" -> {
+                if (!orderDetails.getStatus().equalsIgnoreCase("Menunggu konfirmasi")) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), "Sedang Disiapkan");
+                }
                 return new PrepareStatus(orderDetails, this, menuItemRepository);
             }
             case "deliver" -> {
+                if (!orderDetails.getStatus().equalsIgnoreCase("Sedang disiapkan")) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), "Sedang Diantar");
+                }
                 return new DeliverStatus(orderDetails, this, menuItemRepository);
             }
             case "done" -> {
+                if (!orderDetails.getStatus().equalsIgnoreCase("Sedang diantar")) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), DONE_STATUS);
+                }
                 return new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
             }
             case "cancel" -> {
@@ -222,7 +238,5 @@ public class OrderServiceImpl implements OrderService {
         } catch (HttpClientErrorException e) {
             throw new UUIDNotFoundException();
         }
-
     }
-
 }

@@ -1,4 +1,5 @@
 package id.ac.ui.cs.advprog.cafeservice.model.menu;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import lombok.AllArgsConstructor;
@@ -7,7 +8,6 @@ import lombok.Data;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
-
 import java.util.List;
 
 @Data
@@ -23,6 +23,7 @@ public class MenuItem {
     private String name;
     private Integer price;
     private Integer stock;
-    @OneToMany(mappedBy = "menuItem", cascade = CascadeType.ALL)
+    @OneToMany
+    @JsonIgnore
     private List<OrderDetails> orderDetailsList;
 }

@@ -26,12 +26,18 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven(url = "https://artifactory-oss.prod.netflix.net/artifactory/maven-oss-candidates")
+}
+
+ext {
+    set("springCloudVersion", "2022.0.2")
 }
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-server")
     implementation("org.json:json:20230227")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("io.micrometer:micrometer-registry-prometheus")
@@ -41,6 +47,12 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     runtimeOnly ("org.postgresql:postgresql")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2022.0.2")
+    }
 }
 
 tasks.withType<Test> {
