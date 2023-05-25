@@ -24,5 +24,6 @@ public class MenuItem {
     private Integer price;
     private Integer stock;
     @OneToMany
+    @JsonIgnore
     private List<OrderDetails> orderDetailsList;
 }
