@@ -82,9 +82,6 @@ Publish:
   only:
     - main
 
-
-
-
 Deploy:
   stage: deploy
   image: alpine:latest
@@ -112,6 +109,3 @@ Sonarcloud:
   script:
     - gradle sonar --stacktrace
     - gradle test jacocoTestReport sonar --stacktrace
-  only:
-    - main
-    - develop
