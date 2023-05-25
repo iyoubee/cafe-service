@@ -44,9 +44,9 @@ public class OrderServiceImpl implements OrderService {
     private static final String CANCELLED_STATUS = "Dibatalkan";
 
     private static final String DONE_STATUS = "Selesai";
-    @Value("${API_WARNET}")
+    @Value("${ENV_API_WARNET}")
     private String API_WARNET;
-    @Value("${API_BAYAR}")
+    @Value("${ENV_API_BAYAR}")
     private String API_BAYAR;
 
     @Autowired
