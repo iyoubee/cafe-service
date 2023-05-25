@@ -20,15 +20,13 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -102,9 +100,9 @@ public class OrderServiceImpl implements OrderService {
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
 
             orderDetailsFuture.thenAcceptAsync(orderDetails ->
-                    setOrderPC(request.getSession(), orderDetails, executorService), executorService);
+                    setOrderPC(request.getSession(), orderDetails, executorService), executorService).join();
             orderDetailsFuture.thenAcceptAsync(orderDetails ->
-                    orderDetails.setOrder(order),executorService);
+                    orderDetails.setOrder(order),executorService).join();
 
             OrderDetails orderDetails = orderDetailsFuture.join();
             orderDetailsRepository.save(orderDetails);
@@ -212,8 +210,12 @@ public class OrderServiceImpl implements OrderService {
         String url = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
 
         try {
-            String response = restTemplate.getForObject(url, String.class);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            HttpEntity<String> entityResponse = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+            String response = entityResponse.getBody();
             JSONObject jsonResponse = new JSONObject(response);
             JSONObject sessionInfo = jsonResponse.getJSONObject("session");
             JSONObject pcInfo = sessionInfo.getJSONObject("pc");
@@ -231,7 +233,5 @@ public class OrderServiceImpl implements OrderService {
         } catch (HttpClientErrorException e) {
             throw new UUIDNotFoundException();
         }
-
     }
-
 }

@@ -20,9 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -265,9 +263,22 @@ class OrderServiceImplTest {
 
     @Test
     void testWhenCreateOrderShouldReturnTheCreatedOrder() {
+        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        // Set up mock response
+        String mockResponse = "{\"session\": {\"pc\": {\"id\": 123, \"noPC\": 1, \"noRuangan\": 2}}}";
+        String mockUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
 
+        // Set up RestTemplate mock
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(mockResponse, HttpStatus.OK);
+        when(restTemplateMock.exchange(mockUrl, HttpMethod.GET, entity, String.class)).thenReturn(responseEntity);
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
         when(orderRepository.save(any(Order.class))).thenReturn(order);
+        service.setRestTemplate(restTemplateMock);
 
         Order result = service.create(orderRequest, null);
 
@@ -333,7 +344,14 @@ class OrderServiceImplTest {
         JSONObject response = new JSONObject();
         response.put("session", sessionResponse);
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
         RestTemplate restTemplateMock = mock(RestTemplate.class);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(response.toString(), HttpStatus.OK);
+        when(restTemplateMock.exchange(pcUrl, HttpMethod.GET, entity, String.class)).thenReturn(responseEntity);
+
         service.setRestTemplate(restTemplateMock);
 
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(item));
@@ -653,8 +671,13 @@ class OrderServiceImplTest {
         String mockUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
 
         // Set up RestTemplate mock
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
         RestTemplate restTemplateMock = mock(RestTemplate.class);
-        when(restTemplateMock.getForObject(mockUrl, String.class)).thenReturn(mockResponse);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(mockResponse, HttpStatus.OK);
+        when(restTemplateMock.exchange(mockUrl, HttpMethod.GET, entity, String.class)).thenReturn(responseEntity);
 
         service.setRestTemplate(restTemplateMock);
 
