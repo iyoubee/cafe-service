@@ -110,8 +110,8 @@ Sonarcloud:
     paths:
       - .sonar/cache
   script:
-    - gradle sonarqube
-    - gradle test jacocoTestReport sonarqube
+    - gradle sonar --stacktrace
+    - gradle test jacocoTestReport sonar --stacktrace
   only:
     - main
     - develop
