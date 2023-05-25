@@ -23,7 +23,6 @@ public class DoneStatus implements StatusStrategy {
         if (orderDetails.getTotalPrice() != 0) {
             orderService.addToBill(orderDetails);
         }
-
         orderDetails.setStatus("Selesai");
     }
 }

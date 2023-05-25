@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 
 public class CancelStatus implements StatusStrategy {
+
     OrderDetails orderDetails;
     OrderServiceImpl orderService;
     MenuItemRepository menuItemRepository;

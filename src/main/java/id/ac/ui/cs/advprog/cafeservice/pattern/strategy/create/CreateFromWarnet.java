@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 public class CreateFromWarnet implements CreateStrategy{
     private final MenuItem menuItem;
     private final OrderDetailsData orderDetailsData;
-
     @Override
     public OrderDetails create() {
         return OrderDetails.builder()
