@@ -20,7 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -63,11 +62,6 @@ class OrderServiceImplTest {
     MenuItem menuItem;
 
     OrderRequest orderRequest;
-
-    @Value("${ENV_API_WARNET}")
-    private String API_WARNET;
-    @Value("${ENV_API_BAYAR}")
-    private String API_BAYAR;
 
     @BeforeEach
     void setUp() {
@@ -272,7 +266,7 @@ class OrderServiceImplTest {
         UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
         // Set up mock response
         String mockResponse = "{\"session\": {\"pc\": {\"id\": 123, \"noPC\": 1, \"noRuangan\": 2}}}";
-        String mockUrl = API_WARNET + "/info_sesi/session_detail/" + session;
+        String mockUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
 
         // Set up RestTemplate mock
         HttpHeaders headers = new HttpHeaders();
@@ -338,7 +332,7 @@ class OrderServiceImplTest {
         order.setOrderDetailsList(Collections.singletonList(orderDetails));
 
         UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
-        String pcUrl = API_WARNET + "/info_sesi/session_detail/" + session;
+        String pcUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
         JSONObject pcResponse = new JSONObject();
         pcResponse.put("id", 1);
         pcResponse.put("noPC", 1);
@@ -564,7 +558,7 @@ class OrderServiceImplTest {
         requestBody.put("sessionId", session);
 
         HttpEntity<String> entity = new HttpEntity<>(requestBody.toString(), headers);
-        String billUrl = API_BAYAR + "/bills";
+        String billUrl = "http://34.142.223.187/api/v1/bills";
 
         JSONObject expectedResponse = new JSONObject();
         expectedResponse.put("id", 1);
@@ -674,7 +668,7 @@ class OrderServiceImplTest {
 
         // Set up mock response
         String mockResponse = "{\"session\": {\"pc\": {\"id\": 123, \"noPC\": 1, \"noRuangan\": 2}}}";
-        String mockUrl = API_WARNET + "/info_sesi/session_detail/" + session;
+        String mockUrl = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
 
         // Set up RestTemplate mock
         HttpHeaders headers = new HttpHeaders();
