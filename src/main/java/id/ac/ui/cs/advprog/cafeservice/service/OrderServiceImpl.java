@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -44,10 +43,6 @@ public class OrderServiceImpl implements OrderService {
     private static final String CANCELLED_STATUS = "Dibatalkan";
 
     private static final String DONE_STATUS = "Selesai";
-    @Value("${ENV_API_WARNET}")
-    private String API_WARNET;
-    @Value("${ENV_API_BAYAR}")
-    private String API_BAYAR;
 
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
@@ -194,7 +189,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public void addToBill(OrderDetails orderDetails) throws JSONException {
-        String url = API_BAYAR +"/bills";
+        String url = "http://34.142.223.187/api/v1/bills";
 
         MenuItem orderedMenu = orderDetails.getMenuItem();
         JSONObject requestBody = new JSONObject();
@@ -212,7 +207,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public void setOrderPC(UUID session, OrderDetails orderDetails, ExecutorService executorService) {
-        String url = API_WARNET + "/info_sesi/session_detail/" + session;
+        String url = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
 
         try {
             HttpHeaders headers = new HttpHeaders();
