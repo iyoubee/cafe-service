@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -53,6 +54,12 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> findAll() {
         return orderRepository.findAll();
     }
+
+    @Value("${API_BAYAR}")
+    private String apiBayar;
+
+    @Value("${API_WARNET}")
+    private String apiWarnet;
 
     @Override
     public List<Order> findByPagination(int page) {
@@ -189,7 +196,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public void addToBill(OrderDetails orderDetails) throws JSONException {
-        String url = "http://34.142.223.187/api/v1/bills";
+        String url = apiBayar + "/bills";
 
         MenuItem orderedMenu = orderDetails.getMenuItem();
         JSONObject requestBody = new JSONObject();
@@ -207,7 +214,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     public void setOrderPC(UUID session, OrderDetails orderDetails, ExecutorService executorService) {
-        String url = "http://34.143.176.116/warnet/info_sesi/session_detail/" + session;
+        String url = apiWarnet + "/info_sesi/session_detail/" + session;
 
         try {
             HttpHeaders headers = new HttpHeaders();
