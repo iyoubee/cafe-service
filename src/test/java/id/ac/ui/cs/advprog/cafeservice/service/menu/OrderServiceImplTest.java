@@ -761,6 +761,4 @@ class OrderServiceImplTest {
             service.updateOrderDetailStatus(2, "cancel");
         });
     }
-
-
 }
