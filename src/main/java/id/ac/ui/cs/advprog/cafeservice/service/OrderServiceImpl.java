@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
+import id.ac.ui.cs.advprog.cafeservice.model.order.Status;
 import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateFromCafe;
 import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateFromWarnet;
 import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateStrategy;
@@ -41,9 +42,6 @@ public class OrderServiceImpl implements OrderService {
     private final MenuItemRepository menuItemRepository;
 
     private RestTemplate restTemplate;
-    private static final String CANCELLED_STATUS = "Dibatalkan";
-
-    private static final String DONE_STATUS = "Selesai";
 
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
@@ -131,7 +129,7 @@ public class OrderServiceImpl implements OrderService {
 
         OrderDetails orderDetails = optionalOrderDetails.get();
 
-        if (orderDetails.getStatus().equals(DONE_STATUS) || orderDetails.getStatus().equals(CANCELLED_STATUS)) {
+        if (orderDetails.getStatus().equals(Status.DONE.getValue()) || orderDetails.getStatus().equals(Status.CANCEL.getValue())) {
             throw new OrderDetailStatusInvalid(orderDetailId);
         }
 
@@ -147,20 +145,20 @@ public class OrderServiceImpl implements OrderService {
     private StatusStrategy chooseStatusStrategy(String status, OrderDetails orderDetails) {
         switch (status) {
             case "prepare" -> {
-                if (!orderDetails.getStatus().equalsIgnoreCase("Menunggu konfirmasi")) {
-                    throw new UpdateStatusInvalid(orderDetails.getStatus(), "Sedang Disiapkan");
+                if (!orderDetails.getStatus().equals(Status.CONFIRM.getValue())) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), Status.CONFIRM.getValue());
                 }
                 return new PrepareStatus(orderDetails, this, menuItemRepository);
             }
             case "deliver" -> {
-                if (!orderDetails.getStatus().equalsIgnoreCase("Sedang disiapkan")) {
-                    throw new UpdateStatusInvalid(orderDetails.getStatus(), "Sedang Diantar");
+                if (!orderDetails.getStatus().equals(Status.PREPARE.getValue())) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), Status.DELIVER.getValue());
                 }
                 return new DeliverStatus(orderDetails, this, menuItemRepository);
             }
             case "done" -> {
-                if (!orderDetails.getStatus().equalsIgnoreCase("Sedang diantar")) {
-                    throw new UpdateStatusInvalid(orderDetails.getStatus(), DONE_STATUS);
+                if (!orderDetails.getStatus().equals(Status.DELIVER.getValue())) {
+                    throw new UpdateStatusInvalid(orderDetails.getStatus(), Status.DONE.getValue());
                 }
                 return new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
             }

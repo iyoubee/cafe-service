@@ -4,6 +4,7 @@ import id.ac.ui.cs.advprog.cafeservice.dto.MenuItemRequest;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
+import id.ac.ui.cs.advprog.cafeservice.model.order.Status;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import lombok.RequiredArgsConstructor;
@@ -68,7 +69,7 @@ public class MenuItemServiceImpl implements MenuItemService {
         List<OrderDetails> orderDetailsList = orderDetailsRepository.getByMenuItem(id);
         for (OrderDetails orderDetails : orderDetailsList) {
             orderDetails.setMenuItem(null);
-            if (!orderDetails.getStatus().equals("Selesai")) orderDetails.setStatus("Dibatalkan");
+            if (!orderDetails.getStatus().equals(Status.DONE.getValue())) orderDetails.setStatus(Status.CANCEL.getValue());
             orderDetailsRepository.save(orderDetails);
         }
         menuItemRepository.deleteById(id);

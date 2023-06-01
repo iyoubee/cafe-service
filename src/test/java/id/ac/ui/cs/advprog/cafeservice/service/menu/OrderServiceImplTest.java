@@ -6,6 +6,7 @@ import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
+import id.ac.ui.cs.advprog.cafeservice.model.order.Status;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderRepository;
@@ -84,7 +85,7 @@ class OrderServiceImplTest {
         newOrderDetailsData = new OrderDetailsData();
         newOrderDetailsData.setMenuItemId(menuItem.getId());
         newOrderDetailsData.setQuantity(0);
-        newOrderDetailsData.setStatus("Approved");
+        newOrderDetailsData.setStatus(Status.CONFIRM.getValue());
 
         order = Order.builder()
                 .id(287952)
@@ -93,7 +94,7 @@ class OrderServiceImplTest {
                         OrderDetails.builder()
                                 .menuItem(menuItem)
                                 .quantity(1)
-                                .status("Approved")
+                                .status(Status.CONFIRM.getValue())
                                 .totalPrice(10000)
                                 .build()))
                 .build();
@@ -107,7 +108,7 @@ class OrderServiceImplTest {
                                 .order(order)
                                 .menuItem(menuItem)
                                 .quantity(1)
-                                .status("Cancelled")
+                                .status(Status.CANCEL.getValue())
                                 .totalPrice(10000)
                                 .build()))
                 .build();
@@ -120,7 +121,7 @@ class OrderServiceImplTest {
                                 .order(order)
                                 .menuItem(menuItem)
                                 .quantity(20)
-                                .status("Cancelled")
+                                .status(Status.CANCEL.getValue())
                                 .totalPrice(10000)
                                 .build()))
                 .build();
@@ -135,7 +136,7 @@ class OrderServiceImplTest {
                 .order(order)
                 .menuItem(menuItem)
                 .quantity(1)
-                .status("Cancelled")
+                .status(Status.CANCEL.getValue())
                 .totalPrice(10000)
                 .build();
     }
@@ -147,7 +148,7 @@ class OrderServiceImplTest {
                 .order(new Order())
                 .menuItem(new MenuItem())
                 .quantity(2)
-                .status("pending")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -156,7 +157,7 @@ class OrderServiceImplTest {
                 .order(new Order())
                 .menuItem(new MenuItem())
                 .quantity(3)
-                .status("completed")
+                .status(Status.DONE.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -172,7 +173,7 @@ class OrderServiceImplTest {
                 .order(order)
                 .menuItem(menuItem)
                 .quantity(2)
-                .status("pending")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(20)
                 .build();
 
@@ -181,7 +182,7 @@ class OrderServiceImplTest {
                 .order(order)
                 .menuItem(menuItem)
                 .quantity(2)
-                .status("pending")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(20)
                 .build();
 
@@ -323,7 +324,7 @@ class OrderServiceImplTest {
                 .order(order)
                 .menuItem(item)
                 .quantity(1)
-                .status("Menunggu konfirmasi")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(0)
                 .build();
         order.setOrderDetailsList(Collections.singletonList(orderDetails));
@@ -366,7 +367,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Menunggu Konfirmasi")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -384,7 +385,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Menunggu Konfirmasi")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -402,7 +403,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Sedang Disiapkan")
+                .status(Status.PREPARE.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -420,7 +421,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Sedang disiapkan")
+                .status(Status.PREPARE.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -437,7 +438,7 @@ class OrderServiceImplTest {
                 .id(1)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Selesai")
+                .status(Status.DONE.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -461,7 +462,7 @@ class OrderServiceImplTest {
                 .id(1)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Menunggu Konfirmasi")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -607,7 +608,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Sedang Diantar")
+                .status(Status.DELIVER.getValue())
                 .totalPrice(10000)
                 .order(order)
                 .build();
@@ -636,7 +637,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Sedang Diantar")
+                .status(Status.DELIVER.getValue())
                 .totalPrice(0)
                 .order(order)
                 .build();
@@ -670,7 +671,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Sedang Diantar")
+                .status(Status.DELIVER.getValue())
                 .totalPrice(10000)
                 .order(orderMock)
                 .build();
@@ -681,7 +682,7 @@ class OrderServiceImplTest {
 
         OrderDetails updatedOrderDetails = service.updateOrderDetailStatus(2, "done");
 
-        assertEquals("Selesai", updatedOrderDetails.getStatus());
+        assertEquals(Status.DONE.getValue(), updatedOrderDetails.getStatus());
     }
 
     @Test
@@ -719,7 +720,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Sedang Disiapkan")
+                .status(Status.PREPARE.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -735,7 +736,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Menunggu Konfirmasi")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -752,7 +753,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Sedang Disiapkan")
+                .status(Status.PREPARE.getValue())
                 .totalPrice(10000)
                 .build();
 
@@ -803,7 +804,7 @@ class OrderServiceImplTest {
                 .id(2)
                 .quantity(1)
                 .menuItem(menuItem)
-                .status("Menunggu Konfirmasi")
+                .status(Status.CONFIRM.getValue())
                 .totalPrice(0)
                 .build();
 
@@ -811,5 +812,20 @@ class OrderServiceImplTest {
         when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
 
         assertThrows(OrderDetailStatusInvalid.class, () -> service.updateOrderDetailStatus(2, "cancel"));
+    }
+
+    @Test
+    void testWhenSetOrderPcButUUIDNotFound() {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        UUID session = UUID.randomUUID();
+        service.setRestTemplate(restTemplateMock);
+        when(restTemplateMock.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(String.class))).thenThrow(HttpClientErrorException.class);
+
+        assertThrows(UUIDNotFoundException.class, () -> {
+            service.setOrderPC(session, newOrderDetails, executorService);
+        });
+
+
     }
 }
