@@ -191,7 +191,7 @@ public class OrderServiceImpl implements OrderService {
         try {
             getSessionDetails(url);
             Optional<List<Order>> orderBySession = orderRepository.findBySession(session);
-            return orderBySession.get();
+            return orderBySession.orElseGet(ArrayList::new);
         } catch (HttpClientErrorException e) {
             throw new UUIDNotFoundException();
         }
