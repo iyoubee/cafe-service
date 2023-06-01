@@ -623,6 +623,36 @@ class OrderServiceImplTest {
         OrderDetails deliver = orderService.updateOrderDetailStatus(2, "done");
         assertEquals(orderDetails, deliver);
     }
+
+    @Test
+    void testWhenDoneOrderPackage() {
+        // Set up mock data
+        order = Order.builder()
+                .id(287952)
+                .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+                .build();
+
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Sedang Diantar")
+                .totalPrice(0)
+                .order(order)
+                .build();
+
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
+                menuItemRepository);
+        orderService.setRestTemplate(restTemplate);
+
+        OrderDetails deliver = orderService.updateOrderDetailStatus(2, "done");
+        assertEquals(orderDetails, deliver);
+    }
+
     @Test
     void testWhenUpdateAndIdNotFoundShouldThrowException() {
         when(orderDetailsRepository.findById(10)).thenReturn(Optional.empty());
@@ -731,6 +761,41 @@ class OrderServiceImplTest {
 
         assertThrows(UpdateStatusInvalid.class, () -> service.updateOrderDetailStatus(2, "done"));
     }
+
+    @Test
+    void testWhenAlreadyDoneUpdateOrder() {
+        // Set up mock data
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Selesai")
+                .totalPrice(10000)
+                .build();
+
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        assertThrows(OrderDetailStatusInvalid.class, () -> service.updateOrderDetailStatus(2, "prepare"));
+    }
+
+    @Test
+    void testWhenAlreadyCanceledUpdateOrder() {
+        // Set up mock data
+        OrderDetails orderDetails = OrderDetails.builder()
+                .id(2)
+                .quantity(1)
+                .menuItem(menuItem)
+                .status("Dibatalkan")
+                .totalPrice(10000)
+                .build();
+
+        // Set up mock repository
+        when(orderDetailsRepository.findById(any(Integer.class))).thenReturn(Optional.of(orderDetails));
+
+        assertThrows(OrderDetailStatusInvalid.class, () -> service.updateOrderDetailStatus(2, "prepare"));
+    }
+
     @Test
     void testWhenNegativeCancelOrderFromWarnet() {
         // Set up mock data

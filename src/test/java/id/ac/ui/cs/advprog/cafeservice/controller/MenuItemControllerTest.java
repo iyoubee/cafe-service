@@ -225,6 +225,80 @@ class MenuItemControllerTest {
     }
 
     @Test
+    void testBigPricePutMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
+
+        bodyContent = new Object() {
+            public final String name = "Indomie";
+
+            public final int price = 10000000;
+
+            public final int stock = 100;
+        };
+
+        mvc.perform(put("/cafe/menu/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testLongNamePutMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
+
+        bodyContent = new Object() {
+            public final String name = "IndomieIndomieIndomieIndomieIndomieIndomie";
+
+            public final int price = 10000;
+
+            public final int stock = 100;
+        };
+
+        mvc.perform(put("/cafe/menu/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testEmptyNamePutMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
+
+        bodyContent = new Object() {
+            public final String name = " ";
+
+            public final int price = 10000;
+
+            public final int stock = 100;
+        };
+
+        mvc.perform(put("/cafe/menu/update/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testStringPriceMenuItem() throws Exception {
+        when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
+
+        bodyContent = new Object() {
+            public final String name = "Indomie";
+
+            public final String price = "String";
+
+            public final int stock = 100;
+        };
+
+        mvc.perform(post("/cafe/menu/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest())
+                .andExpect(handler().methodName("addMenuItem"))
+                .andExpect(jsonPath("$.message").value("Invalid request payload"));;
+    }
+
+    @Test
     void testNameEmptyPutMenuItem() throws Exception {
         when(service.create(any(MenuItemRequest.class))).thenReturn(emptyName);
 
