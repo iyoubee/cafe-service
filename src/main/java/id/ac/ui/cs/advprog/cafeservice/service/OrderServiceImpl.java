@@ -187,8 +187,14 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<Order> findBySession(UUID session) {
-        Optional<List<Order>> orderBySession = orderRepository.findBySession(session);
-        return orderBySession.orElseGet(ArrayList::new);
+        String url = apiWarnet + "/info_sesi/session_detail/" + session;
+        try {
+            getSessionDetails(url);
+            Optional<List<Order>> orderBySession = orderRepository.findBySession(session);
+            return orderBySession.get();
+        } catch (HttpClientErrorException e) {
+            throw new UUIDNotFoundException();
+        }
     }
 
     public boolean isOrderDoesNotExist(Integer orderId) {
@@ -217,14 +223,7 @@ public class OrderServiceImpl implements OrderService {
         String url = apiWarnet + "/info_sesi/session_detail/" + session;
 
         try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
-
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            HttpEntity<String> entityResponse = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
-            String response = entityResponse.getBody();
-            JSONObject jsonResponse = new JSONObject(response);
-            JSONObject sessionInfo = jsonResponse.getJSONObject("session");
+            JSONObject sessionInfo = getSessionDetails(url).getJSONObject("session");
             JSONObject pcInfo = sessionInfo.getJSONObject("pc");
 
             CompletableFuture<Void> setIdPc = CompletableFuture.runAsync(() ->
@@ -240,5 +239,15 @@ public class OrderServiceImpl implements OrderService {
         } catch (HttpClientErrorException e) {
             throw new UUIDNotFoundException();
         }
+    }
+
+    public JSONObject getSessionDetails(String url) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entityResponse = restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+        String response = entityResponse.getBody();
+        return new JSONObject(response);
     }
 }

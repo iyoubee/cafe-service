@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
             InvalidJSONException.class,
             UUIDNotFoundException.class,
             MenuItemOutOfStockException.class,
-            UpdateStatusInvalid.class
+            UpdateStatusInvalid.class,
     })
     public ResponseEntity<Object> requestIsInvalid(Exception exception) {
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;
@@ -55,6 +55,17 @@ public class GlobalExceptionHandler {
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;
         ErrorTemplate baseException = new ErrorTemplate(
                 "Invalid request payload",
+                badRequest,
+                ZonedDateTime.now(ZoneId.of("Z"))
+        );
+        return new ResponseEntity<>(baseException, badRequest);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
+        HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+        ErrorTemplate baseException = new ErrorTemplate(
+                "Invalid UUID string",
                 badRequest,
                 ZonedDateTime.now(ZoneId.of("Z"))
         );
