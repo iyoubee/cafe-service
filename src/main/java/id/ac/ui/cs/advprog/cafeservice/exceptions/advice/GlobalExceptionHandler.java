@@ -3,6 +3,7 @@ package id.ac.ui.cs.advprog.cafeservice.exceptions.advice;
 import id.ac.ui.cs.advprog.cafeservice.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -43,6 +44,17 @@ public class GlobalExceptionHandler {
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;
         ErrorTemplate baseException = new ErrorTemplate(
                 exception.getMessage(),
+                badRequest,
+                ZonedDateTime.now(ZoneId.of("Z"))
+        );
+        return new ResponseEntity<>(baseException, badRequest);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Object> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        HttpStatus badRequest = HttpStatus.BAD_REQUEST;
+        ErrorTemplate baseException = new ErrorTemplate(
+                ex.getMessage().replace("JSON parse error: ", ""),
                 badRequest,
                 ZonedDateTime.now(ZoneId.of("Z"))
         );
