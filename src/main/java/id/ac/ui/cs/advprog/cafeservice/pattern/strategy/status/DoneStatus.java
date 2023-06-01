@@ -1,6 +1,7 @@
 package id.ac.ui.cs.advprog.cafeservice.pattern.strategy.status;
 
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
+import id.ac.ui.cs.advprog.cafeservice.model.order.Status;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 import org.springframework.web.client.RestTemplate;
@@ -23,6 +24,6 @@ public class DoneStatus implements StatusStrategy {
         if (orderDetails.getTotalPrice() != 0) {
             orderService.addToBill(orderDetails);
         }
-        orderDetails.setStatus("Selesai");
+        orderDetails.setStatus(Status.DONE.getValue());
     }
 }

@@ -6,7 +6,6 @@ import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.repository.MenuItemRepository;
 import id.ac.ui.cs.advprog.cafeservice.repository.OrderDetailsRepository;
-import id.ac.ui.cs.advprog.cafeservice.service.MenuItemService;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -171,8 +170,6 @@ class MenuItemServiceImplTest {
     @Test
     void testWhenDeleteMenuItemAndNotFoundShouldThrowException() {
         when(repository.findById(any(String.class))).thenReturn(Optional.empty());
-        Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> {
-            service.delete("f20a0089-a4d6-49d7-8be8-9cdc81bd7341");
-        });
+        Assertions.assertThrows(MenuItemDoesNotExistException.class, () -> service.delete("f20a0089-a4d6-49d7-8be8-9cdc81bd7341"));
     }
 }

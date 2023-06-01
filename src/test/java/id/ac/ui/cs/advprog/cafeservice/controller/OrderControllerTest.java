@@ -7,6 +7,7 @@ import id.ac.ui.cs.advprog.cafeservice.exceptions.OrderDoesNotExistException;
 import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
+import id.ac.ui.cs.advprog.cafeservice.model.order.Status;
 import id.ac.ui.cs.advprog.cafeservice.service.OrderServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,10 +18,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -58,21 +56,21 @@ class OrderControllerTest {
         
         newOrder = Order.builder()
             .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-            .orderDetailsList(Arrays.asList(
-                OrderDetails.builder()
-                    .order(newOrder)
-                    .menuItem(menuItem)
-                    .quantity(1)
-                    .status("Menunggu konfirmasi")
-                    .totalPrice(10000)
-                    .build()
+            .orderDetailsList(Collections.singletonList(
+                    OrderDetails.builder()
+                            .order(newOrder)
+                            .menuItem(menuItem)
+                            .quantity(1)
+                            .status(Status.CONFIRM.getValue())
+                            .totalPrice(10000)
+                            .build()
             ))
         .build();
 
         orderDetails = OrderDetails.builder()
-            .id(100)
+            .id(1)
             .order(newOrder)
-            .status("Menunggu Konfirmasi")
+            .status(Status.CONFIRM.getValue())
             .menuItem(menuItem)
             .quantity(1)
             .totalPrice(10000)
@@ -176,13 +174,13 @@ class OrderControllerTest {
     @Test
     void testChangeStatus() throws Exception {
         when(service.updateOrderDetailStatus(any(Integer.class), any(String.class))).thenReturn(orderDetails);
-
+        orderDetails.setStatus(Status.PREPARE.getValue());
         mvc.perform(put("/cafe/order/update/1?status=prepare")
             .contentType(MediaType.APPLICATION_JSON)
             .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isOk())
                 .andExpect(handler().methodName("changeStatus"))
-                .andExpect(jsonPath("$.status").value("Menunggu Konfirmasi"));
+                .andExpect(jsonPath("$.status").value(Status.PREPARE.getValue()));
 
         verify(service, atLeastOnce()).updateOrderDetailStatus(any(Integer.class), any(String.class));
     }
@@ -200,11 +198,12 @@ class OrderControllerTest {
 
     @Test
     void testGetOrderByIdShouldThrowOrderDoesNotExistException() throws Exception {
-        when(service.findById(anyInt())).thenThrow(OrderDoesNotExistException.class);
+        when(service.findById(anyInt())).thenThrow(new OrderDoesNotExistException(1));
 
         mvc.perform(get("/cafe/order/id/1")
             .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Order with id 1 does not exist"));
     }
 
     @Test
