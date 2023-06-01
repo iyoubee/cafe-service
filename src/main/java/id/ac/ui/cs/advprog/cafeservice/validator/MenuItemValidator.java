@@ -8,19 +8,31 @@ import id.ac.ui.cs.advprog.cafeservice.exceptions.MenuItemValueInvalid;
 public class MenuItemValidator {
 
     public void validateRequest(MenuItemRequest request) {
-        if(request.getName() == null || request.getPrice() == null || request.getStock() == null){
+        if (request.getName() == null || request.getPrice() == null || request.getStock() == null) {
             throw new BadRequest();
         }
 
-        else if(request.getName().isEmpty()){
+        if (request.getName().matches("[0-9]*$")) {
+            throw new MenuItemValueInvalid("Name");
+        }
+
+        if (request.getName().trim().isEmpty()) {
             throw new MenuItemValueEmpty("Name");
         }
 
-        else if(request.getPrice() < 0){
+        if (request.getName().length() > 30) {
+            throw new MenuItemValueInvalid("Name");
+        }
+
+        if (request.getPrice() < 0) {
             throw new MenuItemValueInvalid("Price");
         }
 
-        else if(request.getStock() < 0){
+        if (request.getPrice() >= 1000000) {
+            throw new MenuItemValueInvalid("Price");
+        }
+
+        if (request.getStock() < 0) {
             throw new MenuItemValueInvalid("Stock");
         }
     }
