@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Object> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         HttpStatus badRequest = HttpStatus.BAD_REQUEST;
         ErrorTemplate baseException = new ErrorTemplate(
-                ex.getMessage().replace("JSON parse error: ", ""),
+                "Invalid request payload",
                 badRequest,
                 ZonedDateTime.now(ZoneId.of("Z"))
         );
