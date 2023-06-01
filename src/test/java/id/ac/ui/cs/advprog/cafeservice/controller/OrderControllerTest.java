@@ -17,10 +17,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -58,14 +55,14 @@ class OrderControllerTest {
         
         newOrder = Order.builder()
             .session(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
-            .orderDetailsList(Arrays.asList(
-                OrderDetails.builder()
-                    .order(newOrder)
-                    .menuItem(menuItem)
-                    .quantity(1)
-                    .status("Menunggu konfirmasi")
-                    .totalPrice(10000)
-                    .build()
+            .orderDetailsList(Collections.singletonList(
+                    OrderDetails.builder()
+                            .order(newOrder)
+                            .menuItem(menuItem)
+                            .quantity(1)
+                            .status("Menunggu konfirmasi")
+                            .totalPrice(10000)
+                            .build()
             ))
         .build();
 
