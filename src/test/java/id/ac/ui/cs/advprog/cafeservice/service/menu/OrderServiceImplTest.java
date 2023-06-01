@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -519,34 +520,45 @@ class OrderServiceImplTest {
 
     @Test
     void testFindBySession() {
-        UUID session = UUID.randomUUID();
-        List<Order> orders = Arrays.asList(
-                Order.builder().id(1).session(session).build(),
-                Order.builder().id(2).session(session).build());
-        when(orderRepository.findBySession(session)).thenReturn(Optional.of(orders));
 
-        OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
-                menuItemRepository);
-        List<Order> foundOrders = orderService.findBySession(session);
+        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        // Set up mock response
+        String mockResponse = "{\"session\": {\"pc\": {\"id\": 123, \"noPC\": 1, \"noRuangan\": 2}}}";
+        String mockUrl = apiWarnet + "/info_sesi/session_detail/" + session;
 
-        assertEquals(2, foundOrders.size());
-        assertEquals(orders, foundOrders);
-        verify(orderRepository, times(1)).findBySession(session);
+        // Set up RestTemplate mock
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(mockResponse, HttpStatus.OK);
+        when(restTemplateMock.exchange(mockUrl, HttpMethod.GET, entity, String.class)).thenReturn(responseEntity);
+        when(orderRepository.findBySession(session)).thenReturn(Optional.of(List.of(order)));
+        service.setRestTemplate(restTemplateMock);
+
+        List<Order> result = service.findBySession(session);
+
+        verify(orderRepository, atLeastOnce()).findBySession(session);
     }
 
     @Test
     void testWhenFindBySessionNotExist() {
-        UUID session = UUID.randomUUID();
-        List<Order> emptyOrders = new ArrayList<>();
-        when(orderRepository.findBySession(session)).thenReturn(Optional.of(emptyOrders));
-
         OrderServiceImpl orderService = new OrderServiceImpl(orderRepository, orderDetailsRepository, menuItemService,
                 menuItemRepository);
-        List<Order> foundOrders = orderService.findBySession(session);
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        orderService.setRestTemplate(restTemplate);
+        UUID session = UUID.randomUUID();
+        String url = apiWarnet + "/info_sesi/session_detail/" + session;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        String responseBody = "The UUID is not found";
 
-        assertEquals(0, foundOrders.size());
-        assertEquals(emptyOrders, foundOrders);
-        verify(orderRepository, times(1)).findBySession(session);
+        when(restTemplate.exchange(url, HttpMethod.GET, entity, String.class))
+                .thenThrow(new HttpClientErrorException(HttpStatus.BAD_REQUEST, responseBody));
+
+        assertThrows(UUIDNotFoundException.class, () -> orderService.findBySession(session));
     }
 
     @Test

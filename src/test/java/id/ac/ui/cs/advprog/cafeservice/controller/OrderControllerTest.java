@@ -110,6 +110,18 @@ class OrderControllerTest {
     }
 
     @Test
+    void testGetOrderBySessionAndSessionNotUUID() throws Exception {
+        List<Order> listOrder = new ArrayList<>();
+        listOrder.add(newOrder);
+
+        mvc.perform(get("/cafe/order/abc")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(handler().methodName("getOrderBySession"))
+                .andExpect(jsonPath("$.message").value("Invalid UUID string"));
+    }
+
+    @Test
     void testGetAllOrder() throws Exception {
         mvc.perform(get("/cafe/order/all")
             .contentType(MediaType.APPLICATION_JSON))
