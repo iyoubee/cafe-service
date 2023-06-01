@@ -10,6 +10,9 @@ import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.service.MenuItemServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -224,58 +228,24 @@ class MenuItemControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    void testBigPricePutMenuItem() throws Exception {
-        when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
-
-        bodyContent = new Object() {
-            public final String name = "Indomie";
-
-            public final int price = 10000000;
-
-            public final int stock = 100;
-        };
+    @ParameterizedTest
+    @MethodSource("invalidPutMenuItemRequests")
+    void testPutInvalidMenuItem(MenuItemRequest request) throws Exception {
+        when(service.update(anyString(), any(MenuItemRequest.class))).thenReturn(invalidValue);
 
         mvc.perform(put("/cafe/menu/update/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
+                        .content(Util.mapToJson(request)))
                 .andExpect(status().isBadRequest());
+
     }
 
-    @Test
-    void testLongNamePutMenuItem() throws Exception {
-        when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
-
-        bodyContent = new Object() {
-            public final String name = "IndomieIndomieIndomieIndomieIndomieIndomie";
-
-            public final int price = 10000;
-
-            public final int stock = 100;
-        };
-
-        mvc.perform(put("/cafe/menu/update/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void testEmptyNamePutMenuItem() throws Exception {
-        when(service.create(any(MenuItemRequest.class))).thenReturn(invalidValue);
-
-        bodyContent = new Object() {
-            public final String name = " ";
-
-            public final int price = 10000;
-
-            public final int stock = 100;
-        };
-
-        mvc.perform(put("/cafe/menu/update/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(Util.mapToJson(bodyContent)))
-                .andExpect(status().isBadRequest());
+    private static Stream<Arguments> invalidPutMenuItemRequests() {
+        return Stream.of(
+                Arguments.of(new MenuItemRequest("Indomie", 10000000, 100)),
+                Arguments.of(new MenuItemRequest("IndomieIndomieIndomieIndomieIndomieIndomie", 10000, 100)),
+                Arguments.of(new MenuItemRequest(" ", 10000, 100))
+        );
     }
 
     @Test
