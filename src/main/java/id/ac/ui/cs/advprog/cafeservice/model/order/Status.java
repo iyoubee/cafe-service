@@ -1,9 +1,9 @@
 package id.ac.ui.cs.advprog.cafeservice.model.order;
 
 public enum Status {
-    CONFIRM("Menunggu konfirmasi"),
-    PREPARE("Sedang disiapkan"),
-    DELIVER("Sedang diantar"),
+    CONFIRM("Menunggu Konfirmasi"),
+    PREPARE("Sedang Disiapkan"),
+    DELIVER("Sedang Diantar"),
     DONE("Selesai"),
     CANCEL("Dibatalkan");
 
