@@ -8,6 +8,7 @@ import id.ac.ui.cs.advprog.cafeservice.model.menu.MenuItem;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Order;
 import id.ac.ui.cs.advprog.cafeservice.model.order.OrderDetails;
 import id.ac.ui.cs.advprog.cafeservice.model.order.Status;
+import id.ac.ui.cs.advprog.cafeservice.model.order.RequestParam;
 import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateFromCafe;
 import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateFromWarnet;
 import id.ac.ui.cs.advprog.cafeservice.pattern.strategy.create.CreateStrategy;
@@ -143,26 +144,27 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private StatusStrategy chooseStatusStrategy(String status, OrderDetails orderDetails) {
-        switch (status) {
-            case "prepare" -> {
+        RequestParam statusEnum = RequestParam.fromString(status);
+        switch (statusEnum) {
+            case PREPARE -> {
                 if (!orderDetails.getStatus().equals(Status.CONFIRM.getValue())) {
                     throw new UpdateStatusInvalid(orderDetails.getStatus(), Status.CONFIRM.getValue());
                 }
                 return new PrepareStatus(orderDetails, this, menuItemRepository);
             }
-            case "deliver" -> {
+            case DELIVER -> {
                 if (!orderDetails.getStatus().equals(Status.PREPARE.getValue())) {
                     throw new UpdateStatusInvalid(orderDetails.getStatus(), Status.DELIVER.getValue());
                 }
                 return new DeliverStatus(orderDetails, this, menuItemRepository);
             }
-            case "done" -> {
+            case DONE -> {
                 if (!orderDetails.getStatus().equals(Status.DELIVER.getValue())) {
                     throw new UpdateStatusInvalid(orderDetails.getStatus(), Status.DONE.getValue());
                 }
                 return new DoneStatus(orderDetails, this, menuItemRepository, restTemplate);
             }
-            case "cancel" -> {
+            case CANCEL -> {
                 return new CancelStatus(orderDetails, this, menuItemRepository);
             }
             default -> throw new BadRequest();
