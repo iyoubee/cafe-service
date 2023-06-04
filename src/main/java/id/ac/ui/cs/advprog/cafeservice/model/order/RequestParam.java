@@ -1,7 +1,5 @@
 package id.ac.ui.cs.advprog.cafeservice.model.order;
 
-import id.ac.ui.cs.advprog.cafeservice.exceptions.BadRequest;
-
 public enum RequestParam {
 
     PREPARE("prepare"),
