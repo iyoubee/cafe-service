@@ -19,7 +19,7 @@ class CafeServiceApplicationTests {
     }
 
     @Test
-    public void testRestTemplateBean() {
+    void testRestTemplateBean() {
         RestTemplateBuilder builderMock = mock(RestTemplateBuilder.class);
         RestTemplate restTemplateMock = mock(RestTemplate.class);
         Mockito.when(builderMock.build()).thenReturn(restTemplateMock);
@@ -31,7 +31,7 @@ class CafeServiceApplicationTests {
     }
 
     @Test
-    public void testRestTemplateBuilderBean() {
+    void testRestTemplateBuilderBean() {
         CafeServiceApplication cafeServiceApplication = new CafeServiceApplication();
         RestTemplateBuilder restTemplateBuilder = cafeServiceApplication.restTemplateBuilder();
 
@@ -39,7 +39,7 @@ class CafeServiceApplicationTests {
     }
 
     @Test
-    public void testMenuItemValidatorBean() {
+    void testMenuItemValidatorBean() {
         CafeServiceApplication cafeServiceApplication = new CafeServiceApplication();
         MenuItemValidator menuItemValidator = cafeServiceApplication.menuItemValidator();
 
@@ -47,7 +47,7 @@ class CafeServiceApplicationTests {
     }
 
     @Test
-    public void testOrderValidatorBean() {
+    void testOrderValidatorBean() {
         CafeServiceApplication cafeServiceApplication = new CafeServiceApplication();
         OrderValidator orderValidator = cafeServiceApplication.orderValidator();
 
