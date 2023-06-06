@@ -281,4 +281,61 @@ class OrderControllerTest {
             .content(Util.mapToJson(bodyContent)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    void testCreateOrderWithNullSession() throws Exception {
+        OrderDetailsData dataRequest = new OrderDetailsData();
+        dataRequest.setMenuItemId("menuItemId");
+        dataRequest.setQuantity(10);
+
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setSession(null);
+        orderRequest.setOrderDetailsData(List.of(dataRequest));
+
+        mvc.perform(post("/cafe/order/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(orderRequest)))
+                .andExpect(status().isBadRequest());
+    }
+    @Test
+    void testCreateOrderWithNullOrderDetailsData() throws Exception {
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setSession(UUID.randomUUID());
+
+        mvc.perform(post("/cafe/order/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(orderRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testCreateOrderWithMissingMenuItemId() throws Exception {
+        OrderDetailsData dataRequest = new OrderDetailsData();
+        dataRequest.setQuantity(10);
+
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setSession(UUID.randomUUID());
+        orderRequest.setOrderDetailsData(List.of(dataRequest));
+
+        mvc.perform(post("/cafe/order/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(orderRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testCreateOrderWithMissingQuantity() throws Exception {
+        OrderDetailsData dataRequest = new OrderDetailsData();
+        dataRequest.setMenuItemId("menuItemId");
+
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setSession(UUID.randomUUID());
+        orderRequest.setOrderDetailsData(List.of(dataRequest));
+
+        mvc.perform(post("/cafe/order/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(orderRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
 }

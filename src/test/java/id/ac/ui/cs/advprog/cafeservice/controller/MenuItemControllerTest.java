@@ -377,4 +377,47 @@ class MenuItemControllerTest {
             .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void testNullPriceAddMenuItem() throws Exception {
+        bodyContent = new Object() {
+            public final String name = "Example Name";
+            public final Integer price = null;
+            public final Integer stock = 100;
+        };
+
+        mvc.perform(post("/cafe/menu/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testNullStockAddMenuItem() throws Exception {
+        bodyContent = new Object() {
+            public final String name = "Example Name";
+            public final Integer price = 10;
+            public final Integer stock = null;
+        };
+
+        mvc.perform(post("/cafe/menu/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testNullValuesAddMenuItem() throws Exception {
+        bodyContent = new Object() {
+            public final String name = null;
+            public final Integer price = 1;
+            public final Integer stock = null;
+        };
+
+        mvc.perform(post("/cafe/menu/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(Util.mapToJson(bodyContent)))
+                .andExpect(status().isBadRequest());
+    }
+
 }
