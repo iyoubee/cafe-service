@@ -82,6 +82,10 @@ class MenuItemServiceImplTest {
         List<MenuItem> result = service.findAll(null);
         verify(repository, atLeastOnce()).findAll();
         assertEquals(allMenuItem, result);
+
+        result = service.findAll("otherQuery");
+        verify(repository, never()).findByStockGreaterThan(anyInt());
+        assertEquals(allMenuItem, result);
     }
 
     @Test
