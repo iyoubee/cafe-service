@@ -15,6 +15,9 @@ variables:
 
 stages:
   - build
+  - test
+  - publish
+  - deploy
   - sonarcloud
 
 Build:

@@ -289,6 +289,30 @@ class OrderServiceImplTest {
     }
 
     @Test
+    void testWhenCreateOrderShouldReturnTheCreatedOrderButFromAnotherSquad() {
+        UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+        // Set up mock response
+        String mockResponse = "{\"session\": {\"pc\": {\"id\": 123, \"noPC\": 1, \"noRuangan\": 2}}}";
+        String mockUrl = apiWarnet + "/info_sesi/session_detail/" + session;
+
+        // Set up RestTemplate mock
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        ResponseEntity<String> responseEntity = new ResponseEntity<>(mockResponse, HttpStatus.OK);
+        when(restTemplateMock.exchange(mockUrl, HttpMethod.GET, entity, String.class)).thenReturn(responseEntity);
+        when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.of(menuItem));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        service.setRestTemplate(restTemplateMock);
+
+        service.create(orderRequest, "cafe");
+
+        verify(orderRepository, atLeastOnce()).save(any(Order.class));
+    }
+
+    @Test
     void testWhenCreateOrderButMenuItemNotFoundShouldThrowException() {
         when(menuItemRepository.findById(any(String.class))).thenReturn(Optional.empty());
 
