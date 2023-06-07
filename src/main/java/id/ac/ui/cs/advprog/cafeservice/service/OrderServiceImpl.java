@@ -106,13 +106,13 @@ public class OrderServiceImpl implements OrderService {
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
 
             orderDetailsFuture.thenAcceptAsync(orderDetails ->
-                    setOrderPC(request.getSession(), orderDetails, executorService), executorService).join();
+                    setOrderPC(request.getSession(), orderDetails, executorService), executorService);
             orderDetailsFuture.thenAcceptAsync(orderDetails ->
-                    orderDetails.setOrder(order),executorService).join();
+                    orderDetails.setOrder(order), executorService);
 
             OrderDetails orderDetails = orderDetailsFuture.join();
             orderDetailsRepository.save(orderDetails);
-            orderDetailsFuture.thenAcceptAsync(orderDetailsList::add, executorService);
+            orderDetailsList.add(orderDetails);
         }
         order.setOrderDetailsList(orderDetailsList);
         orderRepository.save(order);
@@ -233,8 +233,8 @@ public class OrderServiceImpl implements OrderService {
             CompletableFuture<Void> setNoRuangan = CompletableFuture.runAsync(() ->
                     orderDetails.setNoRuangan(pcInfo.getInt("noRuangan")), executorService);
 
-            CompletableFuture<Void> setOrderPC = CompletableFuture.allOf(setIdPc, setNoPc, setNoRuangan);
-            setOrderPC.join();
+            CompletableFuture<Void> setPCInformation = CompletableFuture.allOf(setIdPc, setNoPc, setNoRuangan);
+            setPCInformation.join();
 
         } catch (HttpClientErrorException e) {
             throw new UUIDNotFoundException();
