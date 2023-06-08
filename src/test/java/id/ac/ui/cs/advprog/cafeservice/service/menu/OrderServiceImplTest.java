@@ -684,7 +684,6 @@ class OrderServiceImplTest {
         // Test inputs
         UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
         OrderDetails orderDetails = new OrderDetails();
-        ExecutorService executorService = Executors.newFixedThreadPool(3);
 
         // Set up mock response
         String mockResponse = "{\"session\": {\"pc\": {\"id\": 123, \"noPC\": 1, \"noRuangan\": 2}}}";
@@ -701,7 +700,7 @@ class OrderServiceImplTest {
 
         service.setRestTemplate(restTemplateMock);
 
-        service.setOrderPC(session, orderDetails, executorService);
+        service.setOrderPC(session, orderDetails);
 
         // Extract pcInfo from the mock response
         JSONObject pcInfo = new JSONObject(mockResponse).getJSONObject("session").getJSONObject("pc");
@@ -830,14 +829,14 @@ class OrderServiceImplTest {
 
     @Test
     void testWhenSetOrderPcButUUIDNotFound() {
-        ExecutorService executorService = Executors.newCachedThreadPool();
+
         RestTemplate restTemplateMock = mock(RestTemplate.class);
         UUID session = UUID.randomUUID();
         service.setRestTemplate(restTemplateMock);
         when(restTemplateMock.exchange(anyString(), any(HttpMethod.class), any(HttpEntity.class), eq(String.class))).thenThrow(HttpClientErrorException.class);
 
         assertThrows(UUIDNotFoundException.class, () -> {
-            service.setOrderPC(session, newOrderDetails, executorService);
+            service.setOrderPC(session, newOrderDetails);
         });
 
 

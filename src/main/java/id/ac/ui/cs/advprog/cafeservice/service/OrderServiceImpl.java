@@ -108,7 +108,7 @@ public class OrderServiceImpl implements OrderService {
             menuItemService.update(menuItem.get().getId(), menuItemRequest);
 
             orderDetailsFuture.thenAcceptAsync(orderDetails ->
-                    setOrderPC(request.getSession(), orderDetails, executorService), executorService);
+                    setOrderPC(request.getSession(), orderDetails), executorService);
             orderDetailsFuture.thenAcceptAsync(orderDetails ->
                     orderDetails.setOrder(order), executorService);
 
@@ -221,7 +221,7 @@ public class OrderServiceImpl implements OrderService {
         restTemplate.postForObject(url, entity, String.class);
     }
 
-    public void setOrderPC(UUID session, OrderDetails orderDetails, ExecutorService executorService) {
+    public void setOrderPC(UUID session, OrderDetails orderDetails) {
         String url = apiWarnet + "/info_sesi/session_detail/" + session;
 
         try {
