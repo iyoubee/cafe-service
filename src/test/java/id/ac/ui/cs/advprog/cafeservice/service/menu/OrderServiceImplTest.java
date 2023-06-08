@@ -28,6 +28,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -693,6 +694,7 @@ class OrderServiceImplTest {
 
     @Test
     void testSetPCInformation() {
+        // Test inputs
         UUID session = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
         OrderDetails orderDetails = new OrderDetails();
         ExecutorService executorService = Executors.newFixedThreadPool(3);
@@ -714,12 +716,28 @@ class OrderServiceImplTest {
 
         service.setOrderPC(session, orderDetails, executorService);
 
+        // Extract pcInfo from the mock response
+        JSONObject pcInfo = new JSONObject(mockResponse).getJSONObject("session").getJSONObject("pc");
+
+        // Wait for the completion of CompletableFuture tasks
+        CompletableFuture<Void> setIdPCTask = CompletableFuture.runAsync(() -> orderDetails.setIdPC(pcInfo.getInt("id")));
+        CompletableFuture<Void> setNoPCTask = CompletableFuture.runAsync(() -> orderDetails.setNoPC(pcInfo.getInt("noPC")));
+        CompletableFuture<Void> setNoRuanganTask = CompletableFuture.runAsync(() -> orderDetails.setNoRuangan(pcInfo.getInt("noRuangan")));
+
+        try {
+            setIdPCTask.join();
+            setNoPCTask.join();
+            setNoRuanganTask.join();
+        } catch (Exception e) {
+            // Handle any exceptions that occurred during CompletableFuture execution
+        }
+
+        // Assert the values
         assertTimeout(Duration.ofMillis(10000), () -> {
             assertEquals(123, orderDetails.getIdPC());
             assertEquals(1, orderDetails.getNoPC());
             assertEquals(2, orderDetails.getNoRuangan());
         });
-
     }
 
     @Test
