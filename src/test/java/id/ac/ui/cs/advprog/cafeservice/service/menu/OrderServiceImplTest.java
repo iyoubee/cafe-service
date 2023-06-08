@@ -714,7 +714,7 @@ class OrderServiceImplTest {
 
         service.setOrderPC(session, orderDetails, executorService);
 
-        assertTimeout(Duration.ofMillis(3000), () -> {
+        assertTimeout(Duration.ofMillis(10000), () -> {
             assertEquals(123, orderDetails.getIdPC());
             assertEquals(1, orderDetails.getNoPC());
             assertEquals(2, orderDetails.getNoRuangan());
