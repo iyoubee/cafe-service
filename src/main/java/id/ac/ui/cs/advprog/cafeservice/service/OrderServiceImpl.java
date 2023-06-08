@@ -226,15 +226,9 @@ public class OrderServiceImpl implements OrderService {
             JSONObject sessionInfo = getSessionDetails(url).getJSONObject("session");
             JSONObject pcInfo = sessionInfo.getJSONObject("pc");
 
-            CompletableFuture<Void> setIdPc = CompletableFuture.runAsync(() ->
-                    orderDetails.setIdPC(pcInfo.getInt("id")), executorService);
-            CompletableFuture<Void> setNoPc = CompletableFuture.runAsync(() ->
-                    orderDetails.setNoPC(pcInfo.getInt("noPC")), executorService);
-            CompletableFuture<Void> setNoRuangan = CompletableFuture.runAsync(() ->
-                    orderDetails.setNoRuangan(pcInfo.getInt("noRuangan")), executorService);
-
-            CompletableFuture<Void> setPCInformation = CompletableFuture.allOf(setIdPc, setNoPc, setNoRuangan);
-            setPCInformation.join();
+            CompletableFuture.runAsync(() -> orderDetails.setIdPC(pcInfo.getInt("id")));
+            CompletableFuture.runAsync(() -> orderDetails.setNoPC(pcInfo.getInt("noPC")));
+            CompletableFuture.runAsync(() -> orderDetails.setNoRuangan(pcInfo.getInt("noRuangan")));
 
         } catch (HttpClientErrorException e) {
             throw new UUIDNotFoundException();
