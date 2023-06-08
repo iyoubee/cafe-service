@@ -44,6 +44,8 @@ public class OrderServiceImpl implements OrderService {
 
     private RestTemplate restTemplate;
 
+    private static final String FROM_WARNET = "warnet";
+
     @Autowired
     public void setRestTemplate(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -90,7 +92,7 @@ public class OrderServiceImpl implements OrderService {
             }
 
             CreateStrategy createStrategy;
-            if (from != null && from.equalsIgnoreCase("warnet")) {
+            if (from != null && from.equalsIgnoreCase(FROM_WARNET)) {
                 createStrategy = new CreateFromWarnet(menuItem.get(), orderDetailsData);
             } else {
                 createStrategy = new CreateFromCafe(menuItem.get(), orderDetailsData);
